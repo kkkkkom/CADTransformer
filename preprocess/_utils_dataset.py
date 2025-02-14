@@ -1,14 +1,9 @@
 import os
 import sys
-import pdb
 import time
 import math
-import json
 import copy
-import random
-import shutil
 import signal
-import argparse
 import numpy as np
 from xml.dom import minidom
 import xml.etree.ElementTree as ET
@@ -19,19 +14,18 @@ sys.path.insert(0, os.path.join(BASE_DIR, "../", ))
 sys.path.append(os.path.join(BASE_DIR, "."))
 from config import anno_config
 from bs4 import BeautifulSoup
-from pdb import set_trace as st
 
 IoU_thres=0.5
 ALL_TYPES = ["g", "svg", "path", "circle", "ellipse"]
 LINE_LENGTH_TYPE = ["Polyline", "Circle", "Path", 'Ellipse']
 
 def preprocessing(svg_list):
-    '''Preprocessing the instanceId and semanticId before evaluation
-    convert the instanceId of row_chairs -> -1
-    convert the instanceId of parking_spot -> -2
-    convert the instanceId of wall -> -3
-    convert the instanceId of curtain_wall -> -4
-    convert the instanceId of railing -> -5
+    '''Preprocessing the instanceId and semantic-id before evaluation
+    convert the instance-id of row_chairs -> -1
+    convert the instance-id of parking_spot -> -2
+    convert the instance-id of wall -> -3
+    convert the instance-id of curtain_wall -> -4
+    convert the instance-id of railing -> -5
     '''
     svg_list_new = list()
     row_chairs_id = anno_config.AnnoList().anno_list_all["row chairs"]
@@ -41,24 +35,24 @@ def preprocessing(svg_list):
     railing_id = anno_config.AnnoList().anno_list_all["railing"]
 
     for idx, line in enumerate(svg_list):
-        if "semanticId" in line.keys() or \
-            "instanceId" in line.keys():
-            if line["instanceId"] == str(-1):
-                if line["semanticId"] == str(row_chairs_id):
-                    line["instanceId"] = str(-1)
-                elif line["semanticId"] == str(parking_spot_id):
-                    line["instanceId"] = str(-2)
-                elif line["semanticId"] == str(wall_id):
-                    line["instanceId"] = str(-3)
-                elif line["semanticId"] == str(curtain_wall_id):
-                    line["instanceId"] = str(-4)
-                elif line["semanticId"] == str(railing_id):
-                    line["instanceId"] = str(-5)
+        if "semantic-id" in line.keys() or \
+            "instance-id" in line.keys():
+            if line["instance-id"] == str(-1):
+                if line["semantic-id"] == str(row_chairs_id):
+                    line["instance-id"] = str(-1)
+                elif line["semantic-id"] == str(parking_spot_id):
+                    line["instance-id"] = str(-2)
+                elif line["semantic-id"] == str(wall_id):
+                    line["instance-id"] = str(-3)
+                elif line["semantic-id"] == str(curtain_wall_id):
+                    line["instance-id"] = str(-4)
+                elif line["semantic-id"] == str(railing_id):
+                    line["instance-id"] = str(-5)
                 else:
                     # skip background lines
-                    # assert line["semanticId"] == str(0)
-                    line.pop("semanticId")
-                    line.pop("instanceId")
+                    # assert line["semantic-id"] == str(0)
+                    line.pop("semantic-id")
+                    line.pop("instance-id")
         svg_list_new.append(line)
     return svg_list_new
 
@@ -89,7 +83,7 @@ def get_tp_fp_list(pred_gt_map, cls_num, svg_pred_path):
 def get_fn_list(instGT_instPredList_dict, cls_num):
     gt_pred_map = copy.deepcopy(instGT_instPredList_dict)
     fn_list = dict()
-    for cls_id in range(1, cls_num+1):
+    for cls_id in range(1, cls_num+1): 
         fn_list[cls_id] = list()
     for inst_id_gt in gt_pred_map.keys():
         gt_cls_id = int(gt_pred_map[inst_id_gt]['class'])
@@ -100,24 +94,14 @@ def get_fn_list(instGT_instPredList_dict, cls_num):
     return fn_list
 
 
-def get_all_sem_class(instGT_lineGT_map):
-    '''Get all semantic classes of the gt svg
-    '''
-    sem_list = []
-    for key, val in instGT_lineGT_map.items():
-        sem_list.append(val['class'])
-    sem_list = list(set(sem_list))
-    return sem_list
-
-
 def get_pred_gt_map(instGT_instPredList_dict, pred_instances, svg_list):
     '''
-    In:
+    In: 
         instGT_instPredList_dict:
             {'instanceId(GT)': {'line_idx(GT)':[], 'lengths(GT)':[], 'class(GT)':'NUM', \
                     'instanceIds_pred':[AA, BB], 'AA':{'line_idx(Prd)':[], 'lengths(Prd)':[]}, \
                         'iou_max': NUM}
-        pred_instances:
+        pred_instances: 
             all instanceIds in prediction: ['NUM', 'NUM']
         svg_list:
             Predicted svg list
@@ -125,18 +109,18 @@ def get_pred_gt_map(instGT_instPredList_dict, pred_instances, svg_list):
         A dict, {Prd instanceId: {"iou_max":Num, "class_gt":NUM, "class_pred":NUM}}
     '''
     gt_pred_map = copy.deepcopy(instGT_instPredList_dict)
-
+    
     pred_gt_map = dict()
     for inst_pred in pred_instances:
         pred_gt_map[inst_pred] = dict()
         pred_gt_map[inst_pred]["iou_max"] = 0
         pred_gt_map[inst_pred]["class_gt"] = None
         pred_gt_map[inst_pred]["class_pred"] = None
-
+ 
     for inst_pred in pred_instances:
         #go through gt_pred_map
         iou_max = 0.
-        class_pred = int(get_semanticId_by_instanceId(svg_list, inst_pred)) #get inst_pred semanticId here
+        class_pred = int(get_semanticId_by_instanceId(svg_list, inst_pred)) #get inst_pred semantic-id here
         class_gt = None
         for inst_gt in gt_pred_map.keys():
             if inst_pred not in \
@@ -146,7 +130,7 @@ def get_pred_gt_map(instGT_instPredList_dict, pred_instances, svg_list):
             if iou_tmp > iou_max:
                 iou_max = iou_tmp
                 class_gt = int(gt_pred_map[inst_gt]['class'])
-
+            
         pred_gt_map[inst_pred]["iou_max"] = iou_max
         pred_gt_map[inst_pred]["class_gt"] = class_gt
         pred_gt_map[inst_pred]["class_pred"] = class_pred
@@ -156,9 +140,9 @@ def get_semanticId_by_instanceId(svg_list, inst_id):
     """Get the semanticId by InstanceId
     """
     for idx, line in enumerate(svg_list):
-        if "instanceId" in line.keys():
-            if line["instanceId"] == inst_id:
-                semantic_id = line["semanticId"]
+        if "instance-id" in line.keys():
+            if line["instance-id"] == inst_id:
+                semantic_id = line["semantic-id"]
                 break # A instance should have same semanticId
     return semantic_id
 
@@ -232,9 +216,9 @@ def get_instId_by_lineIdx(svg_list, instGT_lineGT_map):
         line_idxes = instGT_linePred_map[inst_gt]["line_idx"]
         for line_idx in line_idxes:
             pred_line = svg_list[line_idx] # GT svg line index = Pred svg line index
-            if "instanceId" not in pred_line.keys(): # continue will make the pred and gt not alignned?
+            if "instance-id" not in pred_line.keys(): # continue will make the pred and gt not alignned?
                 continue
-            pred_line_instId = pred_line["instanceId"]
+            pred_line_instId = pred_line["instance-id"] 
             instanceIds_pred.append(pred_line_instId)
         instanceIds_pred = list(set(instanceIds_pred))
         for inst_id in instanceIds_pred:
@@ -263,19 +247,24 @@ def get_lineIdx_semanticId_by_instanceId(svg_list, inst_id):
     instId_lineIdx_semId_map["lengths"] = list()
     instId_lineIdx_semId_map["class"] = None
     for idx, line in enumerate(svg_list):
-        if "instanceId" in line.keys():
-            if line["instanceId"] == inst_id:
-                semantic_id = line["semanticId"]
+        if "instance-id" in line.keys():
+            if line["instance-id"] == inst_id:
+                semantic_id = line["semantic-id"]
                 instId_lineIdx_semId_map["line_idx"].append(idx)
                 instId_lineIdx_semId_map["class"] = semantic_id
-                length = get_length(line)
-                length = math.log(1 + length)
+                tag = line["tag"].split("svg}")[-1]
+                tag_suffix = tag.capitalize()
+                if tag_suffix not in LINE_LENGTH_TYPE:
+                    length = 0
+                else:
+                    length = get_length(line)
+                    length = math.log(1 + length)
                 instId_lineIdx_semId_map["lengths"].append(round(length, 3))
     return instId_lineIdx_semId_map
 
 
 def get_lineIdx_for_gt(svg_list, inst_ids):#TODO
-    '''Given the GT svg_list and GT instanceIds,
+    '''Given the GT svg_list and GT instanceIds, 
     find all corresponding line indexes.
     return: {'instanceId(GT)': {'line_idx(GT)':[], 'lengths(GT)':[], 'class(GT)':'NUM'}}
     '''
@@ -284,25 +273,29 @@ def get_lineIdx_for_gt(svg_list, inst_ids):#TODO
         line_idxes[inst_id] = dict()
         line_idxes[inst_id]["line_idx"] = []
         line_idxes[inst_id]["lengths"] = []
-
+    
     for inst_id in inst_ids:
         semantic_id = None
         for line_idx, line in enumerate(svg_list):
-            if "instanceId" not in line.keys():
+            if "instance-id" not in line.keys():
                 continue
-            if inst_id == line["instanceId"]:
-                semantic_id = line["semanticId"]
+            if inst_id == line["instance-id"]:
+                semantic_id = line["semantic-id"]
                 line_idxes[inst_id]["line_idx"].append(line_idx)
 
-                length = get_length(line)
-                length = math.log(1 + length)
-                line_idxes[inst_id]["lengths"].append(round(length, 3))
+                tag = line["tag"].split("svg}")[-1]
+                tag_suffix = tag.capitalize()
+                if tag_suffix not in LINE_LENGTH_TYPE:
+                    line_idxes[inst_id]["lengths"].append(0)
+                    st()
+                else:
+                    length = get_length(line)
+                    length = math.log(1 + length)
+                    line_idxes[inst_id]["lengths"].append(round(length, 3))
         line_idxes[inst_id]["class"] = semantic_id
     return line_idxes
 
-
 def get_length(line):
-    length = 0
     tag = line["tag"].split("svg}")[-1]
     if tag == "circle":
         r = float(line.get('r'))
@@ -318,8 +311,8 @@ def get_length(line):
         r_max = max(rx, ry)
         length = 2*math.pi*r_min + (4 * (r_max - r_min))
     else:
-        print("tag:", tag)
         raise NotImplementedError("Not implementated")
+        exit(0)
     return length
 
 
@@ -328,8 +321,8 @@ def get_instanceId_BG(svg_list):
     """
     all_keys = list()
     for idx, line in enumerate(svg_list):
-        if "instanceId" in line.keys():
-            all_keys.append(line["instanceId"])
+        if "instance-id" in line.keys():
+            all_keys.append(line["instance-id"])
     all_keys = list(set(all_keys))
     return all_keys
 
@@ -339,12 +332,12 @@ def getAllInstanceId(svg_list):
     """
     inst_dict = dict()
     for idx, line in enumerate(svg_list):
-        if "instanceId" in line.keys() and line["instanceId"] != "-1":
-            if line["instanceId"] not in inst_dict.keys():
-                inst_dict[line["instanceId"]] = list()
-                inst_dict[line["instanceId"]].append(line)
+        if "instance-id" in line.keys() and line["instance-id"] != "-1":
+            if line["instance-id"] not in inst_dict.keys():
+                inst_dict[line["instance-id"]] = list()
+                inst_dict[line["instance-id"]].append(line)
             else:
-                inst_dict[line["instanceId"]].append(line)
+                inst_dict[line["instance-id"]].append(line)
     return inst_dict
 
 def svg2png(svg_path, png_path, background_color="white", scale=1):
@@ -354,13 +347,12 @@ def svg2png(svg_path, png_path, background_color="white", scale=1):
     # cairosvg.svg2png(url=svg_path, write_to=png_path, background_color="white")
     command = "cairosvg {} -o {} -b {} -s {}".format(svg_path, png_path, background_color, scale)
     os.system(command)
-    time.sleep(0.01)
+    time.sleep(0.03)
 
 def init_worker():
     '''
     Catch Ctrl+C signal to termiante workers
     '''
-    import signal
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 def svg_reader(svg_path):
@@ -404,7 +396,11 @@ def svg_writer(svg_list, svg_path):
     with open(svg_path, "w") as f:
         f.write(prettyxml)
 
+
 if __name__ == "__main__":
     print("start")
-    tmp = svg_reader("/home/zhiwen/tmp/0067-0013.svg")
-    svg_writer(tmp, "/home/zhiwen/tmp/re-write.svg")
+    tmp = svg_reader("/ssd1/zhiwen/datasets/0425-0003.svg")
+    svg_writer(tmp, "/ssd1/zhiwen/datasets/0425-0003_1.svg")
+
+    tmp = svg_reader("/ssd1/zhiwen/datasets/0425-0003_1.svg")
+    svg_writer(tmp, "/ssd1/zhiwen/datasets/0425-0003_2.svg")

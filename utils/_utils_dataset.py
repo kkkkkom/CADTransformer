@@ -360,6 +360,7 @@ def init_worker():
     '''
     Catch Ctrl+C signal to termiante workers
     '''
+    import signal
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 def svg_reader(svg_path):

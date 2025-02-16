@@ -62,10 +62,10 @@ def _create_vision_transformer(variant, pretrained=True, default_cfg=None, **kwa
 
     # NOTE this extra code to support handling of repr size for in21k pretrained models
     # default_num_classes = default_cfg['num_classes']
-    print(f"[DEBUG] type: {type(default_cfg)}")
-    print(f"[DEBUG] dir: {dir(default_cfg)}")
-    print(f"[DEBUG] cfgs dir: {dir(default_cfg.cfgs)}")
-    print(f"[DEBUG] default dir: {dir(default_cfg.default)}")
+    # print(f"[DEBUG] type: {type(default_cfg)}")
+    # print(f"[DEBUG] dir: {dir(default_cfg)}")
+    # print(f"[DEBUG] cfgs dir: {dir(default_cfg.cfgs)}")
+    # print(f"[DEBUG] default dir: {dir(default_cfg.default)}")
     default_num_classes = default_cfg.default.num_classes
     num_classes = kwargs.get('num_classes', default_num_classes)
     repr_size = kwargs.pop('representation_size', None)
@@ -79,7 +79,7 @@ def _create_vision_transformer(variant, pretrained=True, default_cfg=None, **kwa
 
     model = build_model_with_cfg(
         VisionTransformer_, variant, pretrained,
-        # default_cfg=default_cfg,
+        default_cfg=default_cfg,
         representation_size=repr_size,
         pretrained_filter_fn=checkpoint_filter_fn,
         # pretrained_custom_load='npz' in default_cfg['url'],
@@ -192,7 +192,7 @@ class VisionTransformer_(VisionTransformer):
     def __init__(self, img_size=224, patch_size=16, in_chans=3, num_classes=1000, embed_dim=768, depth=12,
                  num_heads=12, mlp_ratio=4., qkv_bias=True, representation_size=None, distilled=False,
                  drop_rate=0., attn_drop_rate=0., drop_path_rate=0., embed_layer=PatchEmbed, norm_layer=None,
-                 act_layer=None, weight_init='', out_indices=[], model_nn=None, model_k=None):
+                 act_layer=None, weight_init='', out_indices=[], model_nn=None, model_k=None, **kwargs):
         super().__init__()
         self.num_classes = num_classes
         self.num_features = self.embed_dim = embed_dim  # num_features for consistency with other models

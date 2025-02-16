@@ -238,7 +238,8 @@ class VisionTransformer_(VisionTransformer):
         else:
             trunc_normal_(self.cls_token, std=.02)
             # self.apply(_init_vit_weights)
-            self.apply(get_init_weights_vit)
+            # self.apply(get_init_weights_vit)
+            named_apply(get_init_weights_vit(mode, head_bias), self)
 
     def forward_features(self, feat=[]):
         xy_embed_list = []

@@ -34,7 +34,7 @@ def parse_args():
                         default="hrnet48")
     parser.add_argument('--pretrained_model', type=str,
                         default="./pretrained_models/HRNet_W48_C_ssld_pretrained.pth")
-    parser.add_argument("--local_rank", type=int, default=0)
+    parser.add_argument("--local-rank", type=int, default=0)
     parser.add_argument("--log_step", type=int,
                         default=100,
                         help='steps for logging')
@@ -60,6 +60,7 @@ def parse_args():
                         default=None,
                         nargs=argparse.REMAINDER)
     args = parser.parse_args()
+    # args.local_rank = os.environ['LOCAL_RANK']
     return args
 
 def main():

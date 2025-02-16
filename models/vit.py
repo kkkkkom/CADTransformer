@@ -64,6 +64,8 @@ def _create_vision_transformer(variant, pretrained=True, default_cfg=None, **kwa
     # default_num_classes = default_cfg['num_classes']
     print(f"[DEBUG] type: {type(default_cfg)}")
     print(f"[DEBUG] dir: {dir(default_cfg)}")
+    print(f"[DEBUG] cfgs dir: {dir(default_cfg.cfgs)}")
+    print(f"[DEBUG] default dir: {dir(default_cfg.default)}")
     default_num_classes = default_cfg.num_classes
     num_classes = kwargs.get('num_classes', default_num_classes)
     repr_size = kwargs.pop('representation_size', None)

@@ -76,6 +76,8 @@ def _create_vision_transformer(variant, pretrained=True, default_cfg=None, **kwa
     # print(f"[DEBUG] default_cfg.cfgs dir: {dir(default_cfg.cfgs)}")
     # print(f"[DEBUG] default_cfg.default dir: {dir(default_cfg.default)}")
     print(f"[DEBUG] default_cfg.default.hf_hub_id: {default_cfg.default.hf_hub_id}")
+    print(f"[DEBUG] default_cfg.default.custom_load: {default_cfg.default.custom_load}")
+    print(f"[DEBUG] default_cfg.default.file: {default_cfg.default.file}")
     model = build_model_with_cfg(
         VisionTransformer_, variant, pretrained,
         # default_cfg=default_cfg,

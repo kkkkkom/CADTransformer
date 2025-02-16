@@ -73,7 +73,7 @@ def _create_vision_transformer(variant, pretrained=True, default_cfg=None, **kwa
         representation_size=repr_size,
         pretrained_filter_fn=checkpoint_filter_fn,
         # pretrained_custom_load='npz' in default_cfg['url'],
-        pretrained_custom_load='npz' in default_cfg.default.url,
+        # pretrained_custom_load='npz' in default_cfg.default.url,
         **kwargs)
     return model
 

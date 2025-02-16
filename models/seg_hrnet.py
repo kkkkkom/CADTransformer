@@ -23,6 +23,7 @@ BatchNorm2d = nn.BatchNorm2d
 BN_MOMENTUM = 0.01
 logger = logging.getLogger(__name__)
 
+
 def conv3x3(in_planes, out_planes, stride=1):
     """3x3 convolution with padding"""
     return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
@@ -144,7 +145,7 @@ class HighResolutionModule(nn.Module):
                          stride=1):
         downsample = None
         if stride != 1 or \
-           self.num_inchannels[branch_index] != num_channels[branch_index] * block.expansion:
+                self.num_inchannels[branch_index] != num_channels[branch_index] * block.expansion:
             downsample = nn.Sequential(
                 nn.Conv2d(self.num_inchannels[branch_index],
                           num_channels[branch_index] * block.expansion,
@@ -196,14 +197,14 @@ class HighResolutionModule(nn.Module):
                     fuse_layer.append(None)
                 else:
                     conv3x3s = []
-                    for k in range(i-j):
+                    for k in range(i - j):
                         if k == i - j - 1:
                             num_outchannels_conv3x3 = num_inchannels[i]
                             conv3x3s.append(nn.Sequential(
                                 nn.Conv2d(num_inchannels[j],
                                           num_outchannels_conv3x3,
                                           3, 2, 1, bias=False),
-                                BatchNorm2d(num_outchannels_conv3x3, 
+                                BatchNorm2d(num_outchannels_conv3x3,
                                             momentum=BN_MOMENTUM)))
                         else:
                             num_outchannels_conv3x3 = num_inchannels[j]
@@ -275,7 +276,7 @@ class HighResolutionNet(nn.Module):
         block = blocks_dict[self.stage1_cfg['BLOCK']]
         num_blocks = self.stage1_cfg['NUM_BLOCKS'][0]
         self.layer1 = self._make_layer(block, 64, num_channels, num_blocks)
-        stage1_out_channel = block.expansion*num_channels
+        stage1_out_channel = block.expansion * num_channels
 
         self.stage2_cfg = extra['STAGE2']
         num_channels = self.stage2_cfg['NUM_CHANNELS']
@@ -306,8 +307,9 @@ class HighResolutionNet(nn.Module):
             pre_stage_channels, num_channels)
         self.stage4, pre_stage_channels = self._make_stage(
             self.stage4_cfg, num_channels, multi_scale_output=True)
-        
-        last_inp_channels = np.int(np.sum(pre_stage_channels))
+
+        # last_inp_channels = np.int(np.sum(pre_stage_channels))
+        last_inp_channels = int(np.sum(pre_stage_channels))
 
         # self.last_layer = nn.Sequential(
         #     nn.Conv2d(
@@ -349,10 +351,10 @@ class HighResolutionNet(nn.Module):
                     transition_layers.append(None)
             else:
                 conv3x3s = []
-                for j in range(i+1-num_branches_pre):
+                for j in range(i + 1 - num_branches_pre):
                     inchannels = num_channels_pre_layer[-1]
                     outchannels = num_channels_cur_layer[i] \
-                        if j == i-num_branches_pre else inchannels
+                        if j == i - num_branches_pre else inchannels
                     conv3x3s.append(nn.Sequential(
                         nn.Conv2d(
                             inchannels, outchannels, 3, 2, 1, bias=False),
@@ -397,12 +399,12 @@ class HighResolutionNet(nn.Module):
                 reset_multi_scale_output = True
             modules.append(
                 HighResolutionModule(num_branches,
-                                      block,
-                                      num_blocks,
-                                      num_inchannels,
-                                      num_channels,
-                                      fuse_method,
-                                      reset_multi_scale_output)
+                                     block,
+                                     num_blocks,
+                                     num_inchannels,
+                                     num_channels,
+                                     fuse_method,
+                                     reset_multi_scale_output)
             )
             num_inchannels = modules[-1].get_num_inchannels()
 
@@ -452,7 +454,7 @@ class HighResolutionNet(nn.Module):
 
         return x
 
-    def init_weights(self, pretrained='',):
+    def init_weights(self, pretrained='', ):
         logger.info('> init weights from normal distribution')
         for m in self.modules():
             if isinstance(m, nn.Conv2d):

@@ -67,6 +67,7 @@ def _create_vision_transformer(variant, pretrained=True, default_cfg=None, **kwa
     # use self-supervised trained model
     # default_cfg['url'] = 'https://dl.fbaipublicfiles.com/moco-v3/vit-b-300ep/vit-b-300ep.pth.tar'
 
+    print(f"[DEBUG] default_cfg dir: {default_cfg.__dir__}")
     model = build_model_with_cfg(
         VisionTransformer_, variant, pretrained,
         # default_cfg=default_cfg,

@@ -52,11 +52,14 @@ def vit_small_patch32_384_(pretrained=True, **kwargs):
     """ ViT-Small (ViT-S/32) at 384x384.
     """
     model_kwargs = dict(patch_size=32, embed_dim=384, depth=12, num_heads=6, out_indices=[1, 3, 9, 11], **kwargs)
+    print(f"[DEBUG] model_kwargs: {model_kwargs}")
     model = _create_vision_transformer('vit_small_patch32_384', pretrained=pretrained, **model_kwargs)
     return model
 
 
 def _create_vision_transformer(variant, pretrained=True, default_cfg=None, **kwargs):
+    print(f"[DEBUG] Pre default_cfg={default_cfg}")
+    print(f"[DEBUG] default_cfgs={default_cfgs}")
     default_cfg = default_cfg or default_cfgs[variant]
     if kwargs.get('features_only', None):
         raise RuntimeError('features_only not implemented for Vision Transformer models.')

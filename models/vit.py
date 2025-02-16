@@ -7,15 +7,11 @@ from functools import partial
 import torch.nn.functional as F
 from timm.models import create_model
 from collections import OrderedDict
-# from timm.models.vision_transformer import VisionTransformer, _create_vision_transformer, _init_vit_weights, \
-#     checkpoint_filter_fn, default_cfgs
-from timm.models.vision_transformer import VisionTransformer, _create_vision_transformer, \
-    checkpoint_filter_fn, default_cfgs
+from timm.models.vision_transformer import VisionTransformer, _create_vision_transformer, _init_vit_weights, checkpoint_filter_fn, default_cfgs
 from timm.models.layers import PatchEmbed, DropPath, Mlp, trunc_normal_, lecun_normal_
 from timm.models.helpers import build_model_with_cfg, named_apply, adapt_input_conv
 from utils.utils_model import vit_stage_layer_mapping
 from pdb import set_trace as st
-
 
 def get_vit(pretrained=True, cfg=None):
     model_nn = cfg.model.model_nn.split("_")
@@ -27,8 +23,8 @@ def get_vit(pretrained=True, cfg=None):
     for key, val in vit_stage_layer_mapping.items():
         stage_num = int(key.split("stage")[1])
         for v in val:
-            nn_tmp = model_nn[stage_num - 1]
-            k_tmp = model_k[stage_num - 1]
+            nn_tmp = model_nn[stage_num-1]
+            k_tmp = model_k[stage_num-1]
             model_nn_.append(nn_tmp)
             model_k_.append(k_tmp)
 
@@ -36,7 +32,6 @@ def get_vit(pretrained=True, cfg=None):
     # ViT = vit_base_patch32_384_(pretrained=pretrained, model_nn=model_nn_, model_k=model_k_)
     ViT.cuda()
     return ViT
-
 
 def vit_base_patch32_384_(pretrained=True, **kwargs):
     """ ViT-Base model (ViT-B/32) from original paper (https://arxiv.org/abs/2010.11929).
@@ -46,7 +41,6 @@ def vit_base_patch32_384_(pretrained=True, **kwargs):
     model = _create_vision_transformer('vit_base_patch32_384', pretrained=pretrained, **model_kwargs)
     return model
 
-
 def vit_small_patch32_384_(pretrained=True, **kwargs):
     """ ViT-Small (ViT-S/32) at 384x384.
     """
@@ -54,19 +48,13 @@ def vit_small_patch32_384_(pretrained=True, **kwargs):
     model = _create_vision_transformer('vit_small_patch32_384', pretrained=pretrained, **model_kwargs)
     return model
 
-
 def _create_vision_transformer(variant, pretrained=True, default_cfg=None, **kwargs):
     default_cfg = default_cfg or default_cfgs[variant]
     if kwargs.get('features_only', None):
         raise RuntimeError('features_only not implemented for Vision Transformer models.')
 
     # NOTE this extra code to support handling of repr size for in21k pretrained models
-    # default_num_classes = default_cfg['num_classes']
-    # print(f"[DEBUG] type: {type(default_cfg)}")
-    # print(f"[DEBUG] dir: {dir(default_cfg)}")
-    # print(f"[DEBUG] cfgs dir: {dir(default_cfg.cfgs)}")
-    # print(f"[DEBUG] default dir: {dir(default_cfg.default)}")
-    default_num_classes = default_cfg.default.num_classes
+    default_num_classes = default_cfg['num_classes']
     num_classes = kwargs.get('num_classes', default_num_classes)
     repr_size = kwargs.pop('representation_size', None)
     if repr_size is not None and num_classes != default_num_classes:
@@ -82,11 +70,9 @@ def _create_vision_transformer(variant, pretrained=True, default_cfg=None, **kwa
         default_cfg=default_cfg,
         representation_size=repr_size,
         pretrained_filter_fn=checkpoint_filter_fn,
-        # pretrained_custom_load='npz' in default_cfg['url'],
-        pretrained_custom_load='npz' in default_cfg.default.url,
+        pretrained_custom_load='npz' in default_cfg['url'],
         **kwargs)
     return model
-
 
 def index_points(points, idx):
     """
@@ -112,7 +98,7 @@ class Block(nn.Module):
         self.model_k = model_k
         self.norm1 = norm_layer(dim)
         self.attn = Attention(dim, num_heads=num_heads, qkv_bias=qkv_bias, attn_drop=attn_drop,
-                              proj_drop=drop, model_k=model_k, model_nn=model_nn)
+                            proj_drop=drop, model_k=model_k, model_nn=model_nn)
         # NOTE: drop path for stochastic depth, we shall see if this is better than dropout here
         self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
         self.norm2 = norm_layer(dim)
@@ -133,8 +119,7 @@ class Block(nn.Module):
 
 
 class Attention(nn.Module):
-    def __init__(self, dim, num_heads=1, qkv_bias=False, attn_drop=0.0, proj_drop=0.0, model_k=None,
-                 model_nn=None) -> None:
+    def __init__(self, dim,  num_heads=1, qkv_bias=False, attn_drop=0.0, proj_drop=0.0, model_k=None, model_nn=None) -> None:
         super().__init__()
         assert model_k is not None
         assert model_nn is not None
@@ -161,22 +146,17 @@ class Attention(nn.Module):
         xy_knn = index_points(xy, knn_idx)
         qkv = self.qkv(xy_embed).reshape(B, N, 3, C).permute(2, 0, 1, 3)
         q_feat, k_feat, v_feat = qkv.unbind(0)
-        q, k, v = q_feat, index_points(k_feat, knn_idx), index_points(v_feat,
-                                                                      knn_idx)  # q: b x n x h*f, kv: b x n x k x h*f
+        q, k, v = q_feat, index_points(k_feat, knn_idx), index_points(v_feat, knn_idx) # q: b x n x h*f, kv: b x n x k x h*f
         num_k = k.shape[-2]
         assert num_k == v.shape[-2]
-        q = q.reshape([B, N, self.num_heads, -1]).permute([0, 2, 1, 3])  # b x n x h*f -> b x n x h x f -> b x h x n x f
-        k = k.reshape([B, N, num_k, self.num_heads, -1]).permute(
-            [0, 3, 1, 2, 4])  # b x n x k x h*f -> b x n x k x h x f -> b x h x n x k x f
-        v = v.reshape([B, N, num_k, self.num_heads, -1]).permute(
-            [0, 3, 1, 2, 4])  # b x n x k x h*f -> b x n x k x h x f -> b x h x n x k x f
+        q = q.reshape([B, N, self.num_heads, -1]).permute([0, 2, 1, 3]) # b x n x h*f -> b x n x h x f -> b x h x n x f
+        k = k.reshape([B, N, num_k, self.num_heads, -1]).permute([0, 3, 1, 2, 4]) # b x n x k x h*f -> b x n x k x h x f -> b x h x n x k x f
+        v = v.reshape([B, N, num_k, self.num_heads, -1]).permute([0, 3, 1, 2, 4]) # b x n x k x h*f -> b x n x k x h x f -> b x h x n x k x f
 
-        pos_enc = self.fc_delta(xy[:, :, None] - xy_knn).permute(
-            [0, 3, 1, 2])  # b x n x (xy) -> b x n x k x hf -> b x hf x n x k
-        pos_enc = pos_enc.reshape([B, self.num_heads, -1, N, num_k]).permute(
-            [0, 1, 3, 4, 2])  # b x hf x n x k -> b x h x f x n x k -> b x h x n x k x f
+        pos_enc = self.fc_delta(xy[:, :, None] - xy_knn).permute([0, 3, 1, 2])  # b x n x (xy) -> b x n x k x hf -> b x hf x n x k
+        pos_enc = pos_enc.reshape([B, self.num_heads, -1, N, num_k]).permute([0, 1, 3, 4, 2]) # b x hf x n x k -> b x h x f x n x k -> b x h x n x k x f
         # main difference. Vanilla ViT: b x n x c @ b x c x n -> b x n x n
-        attn = torch.sum(q[..., :, None, :] * k, -1)  # b x h x n x k x f -> b x h x n x k
+        attn = torch.sum(q[..., :, None, :] * k, -1) # b x h x n x k x f -> b x h x n x k
         attn = F.softmax(attn / np.sqrt(k.size(-1)), dim=-1)  # b x h x n x k
         attn = self.attn_drop(attn)
         v = v + pos_enc
@@ -187,13 +167,11 @@ class Attention(nn.Module):
         x = self.proj_drop(x)
         return x, [attn, knn_idx]
 
-
 class VisionTransformer_(VisionTransformer):
     def __init__(self, img_size=224, patch_size=16, in_chans=3, num_classes=1000, embed_dim=768, depth=12,
                  num_heads=12, mlp_ratio=4., qkv_bias=True, representation_size=None, distilled=False,
                  drop_rate=0., attn_drop_rate=0., drop_path_rate=0., embed_layer=PatchEmbed, norm_layer=None,
-                 act_layer=None, weight_init='', out_indices=[], model_nn=None, model_k=None, **kwargs):
-        self.dist_token = nn.Parameter(torch.zeros(1, 1, embed_dim)) if distilled else None
+                 act_layer=None, weight_init='', out_indices=[], model_nn=None, model_k=None):
         super().__init__()
         self.num_classes = num_classes
         self.num_features = self.embed_dim = embed_dim  # num_features for consistency with other models
@@ -243,22 +221,7 @@ class VisionTransformer_(VisionTransformer):
 
         self.init_weights(weight_init)
 
-    @staticmethod
-    def init_vit_weights(module, head_bias=0., jax_impl=False):
-        """ Initialize Vision Transformer weights following an older style. """
-        if isinstance(module, nn.Linear):
-            trunc_normal_(module.weight, std=.02)
-            if module.bias is not None:
-                nn.init.constant_(module.bias, head_bias if module.out_features > 1 else 0)
-        elif isinstance(module, nn.Conv2d):
-            nn.init.kaiming_normal_(module.weight, mode='fan_out', nonlinearity='relu')
-            if module.bias is not None:
-                nn.init.zeros_(module.bias)
-        elif isinstance(module, nn.LayerNorm):
-            nn.init.zeros_(module.bias)
-            nn.init.ones_(module.weight)
-
-    def init_weights_bak(self, mode=''):
+    def init_weights(self, mode=''):
         assert mode in ('jax', 'jax_nlhb', 'nlhb', '')
         head_bias = -math.log(self.num_classes) if 'nlhb' in mode else 0.
         trunc_normal_(self.pos_embed, std=.02)
@@ -271,24 +234,11 @@ class VisionTransformer_(VisionTransformer):
             trunc_normal_(self.cls_token, std=.02)
             self.apply(_init_vit_weights)
 
-    def init_weights(self, mode=''):
-        assert mode in ('jax', 'jax_nlhb', 'nlhb', '')
-        head_bias = -math.log(self.num_classes) if 'nlhb' in mode else 0.
-        trunc_normal_(self.pos_embed, std=.02)
-        if self.dist_token is not None:
-            trunc_normal_(self.dist_token, std=.02)
-        if mode.startswith('jax'):
-            named_apply(lambda m: self.init_vit_weights(m, head_bias=head_bias, jax_impl=True), self)
-        else:
-            trunc_normal_(self.cls_token, std=.02)
-            self.apply(self.init_vit_weights)
-
     def forward_features(self, feat=[]):
         xy_embed_list = []
         xy, xy_embed, nns = feat
 
-        _, xy_embed, _, xy_embed_list, attns = self.blocks(
-            [xy, xy_embed, nns, xy_embed_list, None])  # [1, 145, 384] -> [1, 145, 384]
+        _, xy_embed, _, xy_embed_list, attns = self.blocks([xy, xy_embed, nns, xy_embed_list, None]) # [1, 145, 384] -> [1, 145, 384]
         xy_embed = self.norm(xy_embed)
         # res = sum(xy_embed_list) / len(xy_embed_list)
         res = xy_embed
@@ -299,10 +249,8 @@ class VisionTransformer_(VisionTransformer):
         x, attns = x_list
         return [x, attns]
 
-
 if __name__ == "__main__":
     import numpy as np
-
     SEED = 0
     torch.manual_seed(SEED)
     torch.cuda.manual_seed(SEED)

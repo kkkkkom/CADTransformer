@@ -55,7 +55,8 @@ def _create_vision_transformer(variant, pretrained=True, default_cfg=None, **kwa
         raise RuntimeError('features_only not implemented for Vision Transformer models.')
 
     # NOTE this extra code to support handling of repr size for in21k pretrained models
-    default_num_classes = default_cfg['num_classes']
+    # default_num_classes = default_cfg['num_classes']
+    default_num_classes = default_cfg.default.num_classes
     num_classes = kwargs.get('num_classes', default_num_classes)
     repr_size = kwargs.pop('representation_size', None)
     if repr_size is not None and num_classes != default_num_classes:
@@ -71,7 +72,8 @@ def _create_vision_transformer(variant, pretrained=True, default_cfg=None, **kwa
         default_cfg=default_cfg,
         representation_size=repr_size,
         pretrained_filter_fn=checkpoint_filter_fn,
-        pretrained_custom_load='npz' in default_cfg['url'],
+        # pretrained_custom_load='npz' in default_cfg['url'],
+        pretrained_custom_load='npz' in default_cfg.default.url,
         **kwargs)
     return model
 

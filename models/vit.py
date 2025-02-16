@@ -31,6 +31,8 @@ def get_vit(pretrained=True, cfg=None):
             model_nn_.append(nn_tmp)
             model_k_.append(k_tmp)
 
+    print(f"[DEBUG] model_nn: {model_nn_}")
+    print(f"[DEBUG] model_k: {model_k_}")
     ViT = vit_small_patch32_384_(pretrained=pretrained, model_nn=model_nn_, model_k=model_k_)
     # ViT = vit_base_patch32_384_(pretrained=pretrained, model_nn=model_nn_, model_k=model_k_)
     ViT.cuda()

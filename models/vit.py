@@ -59,7 +59,9 @@ def vit_small_patch32_384_(pretrained=True, **kwargs):
 
 def _create_vision_transformer(variant, pretrained=True, default_cfg=None, **kwargs):
     print(f"[DEBUG] Pre default_cfg={default_cfg}")
-    print(f"[DEBUG] default_cfgs={default_cfgs}")
+    print(f"[DEBUG] default_cfgs:")
+    for key, val in default_cfgs.items():
+        print(f"    {key}: {val}")
     default_cfg = default_cfg or default_cfgs[variant]
     if kwargs.get('features_only', None):
         raise RuntimeError('features_only not implemented for Vision Transformer models.')

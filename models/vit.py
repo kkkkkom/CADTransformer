@@ -8,11 +8,13 @@ import torch.nn.functional as F
 from timm.models import create_model
 from collections import OrderedDict
 # from timm.models.vision_transformer import VisionTransformer, _create_vision_transformer, _init_vit_weights, checkpoint_filter_fn, default_cfgs
-from timm.models.vision_transformer import VisionTransformer, _create_vision_transformer, get_init_weights_vit, checkpoint_filter_fn, default_cfgs
+from timm.models.vision_transformer import VisionTransformer, _create_vision_transformer, get_init_weights_vit, \
+    checkpoint_filter_fn, default_cfgs
 from timm.models.layers import PatchEmbed, DropPath, Mlp, trunc_normal_, lecun_normal_
 from timm.models.helpers import build_model_with_cfg, named_apply, adapt_input_conv
 from utils.utils_model import vit_stage_layer_mapping
 from pdb import set_trace as st
+
 
 def get_vit(pretrained=True, cfg=None):
     model_nn = cfg.model.model_nn.split("_")
@@ -24,8 +26,8 @@ def get_vit(pretrained=True, cfg=None):
     for key, val in vit_stage_layer_mapping.items():
         stage_num = int(key.split("stage")[1])
         for v in val:
-            nn_tmp = model_nn[stage_num-1]
-            k_tmp = model_k[stage_num-1]
+            nn_tmp = model_nn[stage_num - 1]
+            k_tmp = model_k[stage_num - 1]
             model_nn_.append(nn_tmp)
             model_k_.append(k_tmp)
 
@@ -33,6 +35,7 @@ def get_vit(pretrained=True, cfg=None):
     # ViT = vit_base_patch32_384_(pretrained=pretrained, model_nn=model_nn_, model_k=model_k_)
     ViT.cuda()
     return ViT
+
 
 def vit_base_patch32_384_(pretrained=True, **kwargs):
     """ ViT-Base model (ViT-B/32) from original paper (https://arxiv.org/abs/2010.11929).
@@ -42,12 +45,14 @@ def vit_base_patch32_384_(pretrained=True, **kwargs):
     model = _create_vision_transformer('vit_base_patch32_384', pretrained=pretrained, **model_kwargs)
     return model
 
+
 def vit_small_patch32_384_(pretrained=True, **kwargs):
     """ ViT-Small (ViT-S/32) at 384x384.
     """
     model_kwargs = dict(patch_size=32, embed_dim=384, depth=12, num_heads=6, out_indices=[1, 3, 9, 11], **kwargs)
     model = _create_vision_transformer('vit_small_patch32_384', pretrained=pretrained, **model_kwargs)
     return model
+
 
 def _create_vision_transformer(variant, pretrained=True, default_cfg=None, **kwargs):
     default_cfg = default_cfg or default_cfgs[variant]
@@ -67,7 +72,7 @@ def _create_vision_transformer(variant, pretrained=True, default_cfg=None, **kwa
     # use self-supervised trained model
     # default_cfg['url'] = 'https://dl.fbaipublicfiles.com/moco-v3/vit-b-300ep/vit-b-300ep.pth.tar'
 
-    print(f"[DEBUG] default_cfg dir: {default_cfg.__dir__}")
+    print(f"[DEBUG] default_cfg dir: {dir(default_cfg)}")
     model = build_model_with_cfg(
         VisionTransformer_, variant, pretrained,
         # default_cfg=default_cfg,
@@ -78,6 +83,7 @@ def _create_vision_transformer(variant, pretrained=True, default_cfg=None, **kwa
         # pretrained_custom_load='npz' in default_cfg.default.url,
         **kwargs)
     return model
+
 
 def index_points(points, idx):
     """
@@ -103,7 +109,7 @@ class Block(nn.Module):
         self.model_k = model_k
         self.norm1 = norm_layer(dim)
         self.attn = Attention(dim, num_heads=num_heads, qkv_bias=qkv_bias, attn_drop=attn_drop,
-                            proj_drop=drop, model_k=model_k, model_nn=model_nn)
+                              proj_drop=drop, model_k=model_k, model_nn=model_nn)
         # NOTE: drop path for stochastic depth, we shall see if this is better than dropout here
         self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
         self.norm2 = norm_layer(dim)
@@ -124,7 +130,8 @@ class Block(nn.Module):
 
 
 class Attention(nn.Module):
-    def __init__(self, dim,  num_heads=1, qkv_bias=False, attn_drop=0.0, proj_drop=0.0, model_k=None, model_nn=None) -> None:
+    def __init__(self, dim, num_heads=1, qkv_bias=False, attn_drop=0.0, proj_drop=0.0, model_k=None,
+                 model_nn=None) -> None:
         super().__init__()
         assert model_k is not None
         assert model_nn is not None
@@ -151,17 +158,22 @@ class Attention(nn.Module):
         xy_knn = index_points(xy, knn_idx)
         qkv = self.qkv(xy_embed).reshape(B, N, 3, C).permute(2, 0, 1, 3)
         q_feat, k_feat, v_feat = qkv.unbind(0)
-        q, k, v = q_feat, index_points(k_feat, knn_idx), index_points(v_feat, knn_idx) # q: b x n x h*f, kv: b x n x k x h*f
+        q, k, v = q_feat, index_points(k_feat, knn_idx), index_points(v_feat,
+                                                                      knn_idx)  # q: b x n x h*f, kv: b x n x k x h*f
         num_k = k.shape[-2]
         assert num_k == v.shape[-2]
-        q = q.reshape([B, N, self.num_heads, -1]).permute([0, 2, 1, 3]) # b x n x h*f -> b x n x h x f -> b x h x n x f
-        k = k.reshape([B, N, num_k, self.num_heads, -1]).permute([0, 3, 1, 2, 4]) # b x n x k x h*f -> b x n x k x h x f -> b x h x n x k x f
-        v = v.reshape([B, N, num_k, self.num_heads, -1]).permute([0, 3, 1, 2, 4]) # b x n x k x h*f -> b x n x k x h x f -> b x h x n x k x f
+        q = q.reshape([B, N, self.num_heads, -1]).permute([0, 2, 1, 3])  # b x n x h*f -> b x n x h x f -> b x h x n x f
+        k = k.reshape([B, N, num_k, self.num_heads, -1]).permute(
+            [0, 3, 1, 2, 4])  # b x n x k x h*f -> b x n x k x h x f -> b x h x n x k x f
+        v = v.reshape([B, N, num_k, self.num_heads, -1]).permute(
+            [0, 3, 1, 2, 4])  # b x n x k x h*f -> b x n x k x h x f -> b x h x n x k x f
 
-        pos_enc = self.fc_delta(xy[:, :, None] - xy_knn).permute([0, 3, 1, 2])  # b x n x (xy) -> b x n x k x hf -> b x hf x n x k
-        pos_enc = pos_enc.reshape([B, self.num_heads, -1, N, num_k]).permute([0, 1, 3, 4, 2]) # b x hf x n x k -> b x h x f x n x k -> b x h x n x k x f
+        pos_enc = self.fc_delta(xy[:, :, None] - xy_knn).permute(
+            [0, 3, 1, 2])  # b x n x (xy) -> b x n x k x hf -> b x hf x n x k
+        pos_enc = pos_enc.reshape([B, self.num_heads, -1, N, num_k]).permute(
+            [0, 1, 3, 4, 2])  # b x hf x n x k -> b x h x f x n x k -> b x h x n x k x f
         # main difference. Vanilla ViT: b x n x c @ b x c x n -> b x n x n
-        attn = torch.sum(q[..., :, None, :] * k, -1) # b x h x n x k x f -> b x h x n x k
+        attn = torch.sum(q[..., :, None, :] * k, -1)  # b x h x n x k x f -> b x h x n x k
         attn = F.softmax(attn / np.sqrt(k.size(-1)), dim=-1)  # b x h x n x k
         attn = self.attn_drop(attn)
         v = v + pos_enc
@@ -171,6 +183,7 @@ class Attention(nn.Module):
         x = self.proj(x)
         x = self.proj_drop(x)
         return x, [attn, knn_idx]
+
 
 class VisionTransformer_(VisionTransformer):
     def __init__(self, img_size=224, patch_size=16, in_chans=3, num_classes=1000, embed_dim=768, depth=12,
@@ -247,7 +260,8 @@ class VisionTransformer_(VisionTransformer):
         xy_embed_list = []
         xy, xy_embed, nns = feat
 
-        _, xy_embed, _, xy_embed_list, attns = self.blocks([xy, xy_embed, nns, xy_embed_list, None]) # [1, 145, 384] -> [1, 145, 384]
+        _, xy_embed, _, xy_embed_list, attns = self.blocks(
+            [xy, xy_embed, nns, xy_embed_list, None])  # [1, 145, 384] -> [1, 145, 384]
         xy_embed = self.norm(xy_embed)
         # res = sum(xy_embed_list) / len(xy_embed_list)
         res = xy_embed
@@ -258,8 +272,10 @@ class VisionTransformer_(VisionTransformer):
         x, attns = x_list
         return [x, attns]
 
+
 if __name__ == "__main__":
     import numpy as np
+
     SEED = 0
     torch.manual_seed(SEED)
     torch.cuda.manual_seed(SEED)

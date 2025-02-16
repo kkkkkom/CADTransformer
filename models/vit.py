@@ -66,7 +66,7 @@ def _create_vision_transformer(variant, pretrained=True, default_cfg=None, **kwa
     print(f"[DEBUG] dir: {dir(default_cfg)}")
     print(f"[DEBUG] cfgs dir: {dir(default_cfg.cfgs)}")
     print(f"[DEBUG] default dir: {dir(default_cfg.default)}")
-    default_num_classes = default_cfg.num_classes
+    default_num_classes = default_cfg.default.num_classes
     num_classes = kwargs.get('num_classes', default_num_classes)
     repr_size = kwargs.pop('representation_size', None)
     if repr_size is not None and num_classes != default_num_classes:
@@ -83,7 +83,7 @@ def _create_vision_transformer(variant, pretrained=True, default_cfg=None, **kwa
         representation_size=repr_size,
         pretrained_filter_fn=checkpoint_filter_fn,
         # pretrained_custom_load='npz' in default_cfg['url'],
-        pretrained_custom_load='npz' in default_cfg.url,
+        pretrained_custom_load='npz' in default_cfg.default.url,
         **kwargs)
     return model
 

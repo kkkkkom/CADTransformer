@@ -175,6 +175,7 @@ class VisionTransformer_(VisionTransformer):
                  num_heads=12, mlp_ratio=4., qkv_bias=True, representation_size=None, distilled=False,
                  drop_rate=0., attn_drop_rate=0., drop_path_rate=0., embed_layer=PatchEmbed, norm_layer=None,
                  act_layer=None, weight_init='', out_indices=[], model_nn=None, model_k=None):
+        self.dist_token = nn.Parameter(torch.zeros(1, 1, embed_dim)) if distilled else None
         super().__init__()
         self.num_classes = num_classes
         self.num_features = self.embed_dim = embed_dim  # num_features for consistency with other models

@@ -99,7 +99,7 @@ def _create_vision_transformer(variant, pretrained=True, default_cfg=None, **kwa
         # pretrained_custom_load='npz' in default_cfg.default.url,
         **kwargs)
     state_dict = torch.load(local_weight_path, map_location="cuda")
-    model.load_state_dict(state_dict, strict=True)
+    model.load_state_dict(state_dict, strict=False)
     return model
 
 

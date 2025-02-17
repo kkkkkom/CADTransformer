@@ -9,6 +9,7 @@ import torchvision.transforms as T
 from torch.utils.data import Dataset
 from utils.utils_model import *
 
+
 class CADDataLoader(Dataset):
     def __init__(self, split='train', do_norm=True, cfg=None, max_prim=12000):
         self.set_random_seed(123)
@@ -49,7 +50,6 @@ class CADDataLoader(Dataset):
             self.aug_training()
             print(f" > after aug training: {len(self.anno_path_list)}")
 
-
         if not self.debug:
             assert len(self.image_path_list) == len(self.anno_path_list)
         self.length = len(self.image_path_list)
@@ -72,7 +72,7 @@ class CADDataLoader(Dataset):
         image_path_list_new = []
         for idx, ann_path in enumerate(self.anno_path_list):
             adj_node_classes = np.load(ann_path, \
-                                    allow_pickle=True).item()
+                                       allow_pickle=True).item()
             target = adj_node_classes["cat"]
             if self.split == "training":
                 if self.max_prim >= len(target) >= self.filter_num:
@@ -84,32 +84,31 @@ class CADDataLoader(Dataset):
                     image_path_list_new.append(self.image_path_list[idx])
         return image_path_list_new, anno_path_list_new
 
-
     def __len__(self):
         return self.length
-
 
     def _get_item(self, index):
         img_path = self.image_path_list[index]
         ann_path = self.anno_path_list[index]
         assert os.path.basename(img_path).split(".")[0] == \
-            os.path.basename(ann_path).split(".")[0]
+               os.path.basename(ann_path).split(".")[0]
 
         image = Image.open(img_path).convert("RGB")
         image = image.resize((self.size, self.size))
         image = self.transform(image).cuda()
 
         adj_node_classes = np.load(ann_path, \
-                            allow_pickle=True).item()
+                                   allow_pickle=True).item()
         target = adj_node_classes["cat"]
         target = torch.from_numpy(np.array(target, dtype=np.long)).cuda()
 
         center = adj_node_classes["ct_norm"]
         xy = torch.from_numpy(np.array(center, dtype=np.float32)).cuda()
 
+        self.rgb_dim = 0
         if self.rgb_dim > 0:
-            # rgb_npy_path = ann_path.replace('/npy/', '/npy_rgb/')
-            rgb_npy_path = ann_path.replace('/npy/', '/npy/')
+            rgb_npy_path = ann_path.replace('/npy/', '/npy_rgb/')
+            # rgb_npy_path = ann_path.replace('/npy/', '/npy/')
             rgb_info = np.load(rgb_npy_path, allow_pickle=True).item()['rgbs']
             rgb_info = torch.from_numpy(np.array(rgb_info, dtype=np.long)).cuda()
         else:
@@ -128,10 +127,8 @@ class CADDataLoader(Dataset):
 
         return image, xy, target, rgb_info, nns, offset, instance, indexes, basename
 
-
     def __getitem__(self, index):
         return self._get_item(index)
-
 
     def random_sample(self, image, xy, target, rgb_info, nns, offset, instance, indexes, basename):
         length = xy.shape[0]
@@ -145,7 +142,6 @@ class CADDataLoader(Dataset):
         instance = instance[rand_idx]
         return image, xy, target, rgb_info, nns, offset, instance, indexes, basename
 
-
     def set_random_seed(self, seed, deterministic=False):
         random.seed(seed)
         np.random.seed(seed)
@@ -157,10 +153,12 @@ class CADDataLoader(Dataset):
             torch.backends.cudnn.deterministic = True
             torch.backends.cudnn.benchmark = False
 
-
     def aug_training(self):
-        self.image_path_list_aux = glob(os.path.join(self.root, "images", "{}_aug5x".format(self.split), "images", "*.png"))
-        self.anno_path_list_aux = glob(os.path.join(self.root, "annotations", "{}_aug5x".format(self.split), "constructed_graphs_withnninst", "*.npy"))
+        self.image_path_list_aux = glob(
+            os.path.join(self.root, "images", "{}_aug5x".format(self.split), "images", "*.png"))
+        self.anno_path_list_aux = glob(
+            os.path.join(self.root, "annotations", "{}_aug5x".format(self.split), "constructed_graphs_withnninst",
+                         "*.npy"))
         self.image_path_list_aux = sorted(self.image_path_list_aux)
         self.anno_path_list_aux = sorted(self.anno_path_list_aux)
         try:
@@ -171,6 +169,7 @@ class CADDataLoader(Dataset):
                 set2 = set(list2)
                 iset = set1.intersection(set2)
                 return list(iset)
+
             img_list = [os.path.basename(x).split(".")[0] for x in self.image_path_list_aux]
             ann_list = [os.path.basename(x).split(".")[0] for x in self.anno_path_list_aux]
             intersect = extra_same_elem(img_list, ann_list)
@@ -183,12 +182,11 @@ class CADDataLoader(Dataset):
         aux_len = len(self.anno_path_list_aux)
         aug_n = int(self.aug_ratio * self.train_len)
         aug_n = min(aug_n, aux_len)
-        idxes = random.sample(range(0, aux_len-1), aug_n)
+        idxes = random.sample(range(0, aux_len - 1), aug_n)
         self.image_path_list_aux = [self.image_path_list_aux[i] for i in idxes]
         self.anno_path_list_aux = [self.anno_path_list_aux[i] for i in idxes]
         self.image_path_list.extend(self.image_path_list_aux)
         self.anno_path_list.extend(self.anno_path_list_aux)
-
 
     def get_instance_center_tensor(self, instance, center, semantic=None, img_path=None):
         offset_list = []
@@ -223,6 +221,7 @@ class CADDataLoader(Dataset):
                     st()
         instance_center = torch.from_numpy(np.array(offset_list, dtype=np.float32)).cuda()
         return instance_center
+
 
 if __name__ == '__main__':
     pass

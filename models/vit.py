@@ -65,7 +65,8 @@ def _create_vision_transformer(variant, pretrained=True, default_cfg=None, **kwa
     default_cfg = default_cfg or default_cfgs[variant]
     local_weight_path = "/kaggle/input/hrnet-w48-c/pytorch/1/1/hrnetv2_w48_imagenet_pretrained.pth"
     # default_cfg.default.state_dict = local_weight_path
-    default_cfg.default.hf_hub_id = "timm/vit_small_patch32_384.augreg_in21k_ft_in1k"
+    # default_cfg.default.hf_hub_id = "timm/vit_small_patch32_384.augreg_in21k_ft_in1k"
+    default_cfg.default.hf_hub_id = "timm/hrnet_w48.ms_in1k"
     if kwargs.get('features_only', None):
         raise RuntimeError('features_only not implemented for Vision Transformer models.')
 

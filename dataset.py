@@ -15,8 +15,8 @@ class CADDataLoader(Dataset):
         self.set_random_seed(123)
         self.root = cfg.root
         self.split = split
-        self.max_prim = max_prim
-        # self.max_prim = cfg.max_prim
+        # self.max_prim = max_prim
+        self.max_prim = cfg.max_prim
         self.debug = cfg.debug
         if cfg is not None:
             self.clus_num_per_batch = cfg.clus_num_per_batch

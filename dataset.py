@@ -16,6 +16,7 @@ class CADDataLoader(Dataset):
         self.root = cfg.root
         self.split = split
         self.max_prim = max_prim
+        # self.max_prim = cfg.max_prim
         self.debug = cfg.debug
         if cfg is not None:
             self.clus_num_per_batch = cfg.clus_num_per_batch
@@ -68,6 +69,7 @@ class CADDataLoader(Dataset):
         print(" > after filter_smallset:", len(self.anno_path_list))
 
     def filter_smallset(self):
+        print(f"[DEBUG] self.max_prim={self.max_prim}")
         anno_path_list_new = []
         image_path_list_new = []
         for idx, ann_path in enumerate(self.anno_path_list):

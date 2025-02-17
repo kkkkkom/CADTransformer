@@ -77,7 +77,8 @@ class CADDataLoader(Dataset):
             adj_node_classes = np.load(ann_path, \
                                        allow_pickle=True).item()
             target = adj_node_classes["cat"]
-            if self.split == "training":
+            # if self.split == "training":
+            if self.split == "train":
                 if self.max_prim >= len(target) >= self.filter_num:
                     anno_path_list_new.append(self.anno_path_list[idx])
                     image_path_list_new.append(self.image_path_list[idx])

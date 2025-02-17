@@ -63,7 +63,8 @@ def _create_vision_transformer(variant, pretrained=True, default_cfg=None, **kwa
     # for key, val in default_cfgs.items():
     #     print(f"    {key}: {val}")
     default_cfg = default_cfg or default_cfgs[variant]
-    default_cfg.default.state_dict = "/kaggle/input/hrnet-w48-c/pytorch/1/1/hrnetv2_w48_imagenet_pretrained.pth"
+    local_weight_path = "/kaggle/input/hrnet-w48-c/pytorch/1/1/hrnetv2_w48_imagenet_pretrained.pth"
+    default_cfg.default.state_dict = local_weight_path
     default_cfg.default.hf_hub_id = None
     if kwargs.get('features_only', None):
         raise RuntimeError('features_only not implemented for Vision Transformer models.')
@@ -88,7 +89,8 @@ def _create_vision_transformer(variant, pretrained=True, default_cfg=None, **kwa
     print(f"[DEBUG] default_cfg.default.custom_load: {default_cfg.default.custom_load}")
     print(f"[DEBUG] default_cfg.default.file: {default_cfg.default.file}")
     model = build_model_with_cfg(
-        VisionTransformer_, variant, pretrained,
+        # VisionTransformer_, variant, pretrained,
+        VisionTransformer_, variant, False,
         # default_cfg=default_cfg,
         pretrained_cfg=default_cfg.default,
         representation_size=repr_size,
@@ -96,6 +98,8 @@ def _create_vision_transformer(variant, pretrained=True, default_cfg=None, **kwa
         # pretrained_custom_load='npz' in default_cfg['url'],
         # pretrained_custom_load='npz' in default_cfg.default.url,
         **kwargs)
+    # state_dict = torch.load(local_weight_path, map_location="cuda")
+    # model.load_state_dict(state_dict, strict=True)
     return model
 
 

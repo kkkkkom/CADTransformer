@@ -70,6 +70,7 @@ class CADDataLoader(Dataset):
 
     def filter_smallset(self):
         print(f"[DEBUG] self.max_prim={self.max_prim}")
+        print(f"[DEBUG] self.split={self.split}")
         anno_path_list_new = []
         image_path_list_new = []
         for idx, ann_path in enumerate(self.anno_path_list):

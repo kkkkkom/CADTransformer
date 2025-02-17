@@ -63,7 +63,7 @@ def _create_vision_transformer(variant, pretrained=True, default_cfg=None, **kwa
     # for key, val in default_cfgs.items():
     #     print(f"    {key}: {val}")
     default_cfg = default_cfg or default_cfgs[variant]
-    # local_weight_path = "/kaggle/input/hrnet-w48-c/pytorch/1/1/hrnetv2_w48_imagenet_pretrained.pth"
+    local_weight_path = "/kaggle/input/hrnet-w48-c/pytorch/1/1/hrnetv2_w48_imagenet_pretrained.pth"
     # default_cfg.default.state_dict = local_weight_path
     default_cfg.default.hf_hub_id = "timm/vit_small_patch32_384.augreg_in21k_ft_in1k"
     if kwargs.get('features_only', None):
@@ -98,8 +98,8 @@ def _create_vision_transformer(variant, pretrained=True, default_cfg=None, **kwa
         # pretrained_custom_load='npz' in default_cfg['url'],
         # pretrained_custom_load='npz' in default_cfg.default.url,
         **kwargs)
-    # state_dict = torch.load(local_weight_path, map_location="cuda")
-    # model.load_state_dict(state_dict, strict=False)
+    state_dict = torch.load(local_weight_path, map_location="cuda")
+    model.load_state_dict(state_dict, strict=True)
     return model
 
 

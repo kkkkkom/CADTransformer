@@ -108,7 +108,8 @@ class CADDataLoader(Dataset):
         xy = torch.from_numpy(np.array(center, dtype=np.float32)).cuda()
 
         if self.rgb_dim > 0:
-            rgb_npy_path = ann_path.replace('/npy/', '/npy_rgb/')
+            # rgb_npy_path = ann_path.replace('/npy/', '/npy_rgb/')
+            rgb_npy_path = ann_path.replace('/npy/', '/npy/')
             rgb_info = np.load(rgb_npy_path, allow_pickle=True).item()['rgbs']
             rgb_info = torch.from_numpy(np.array(rgb_info, dtype=np.long)).cuda()
         else:

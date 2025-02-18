@@ -152,8 +152,7 @@ def main():
             eval_F1 = do_eval(model, test_dataloader, logger, cfg)
             exit(0)
 
-    train_dataset = CADDataLoader(split='train', do_norm=cfg.do_norm, cfg=cfg
-                                  )
+    train_dataset = CADDataLoader(split='train', do_norm=cfg.do_norm, cfg=cfg)
     train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset, shuffle=True)
     train_dataloader = DataLoaderX(args.local_rank, dataset=train_dataset,
                                   sampler=train_sampler, batch_size=cfg.batch_size,

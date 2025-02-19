@@ -65,6 +65,7 @@ def parse_args():
 
 def main():
     args = parse_args()
+    print(f"[DEBUG] args={args}")
     cfg = update_config(config, args)
 
     os.makedirs(cfg.log_dir, exist_ok=True)

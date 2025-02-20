@@ -14,7 +14,8 @@ _C = CN()
 # train parameters
 _C.batch_size = 1
 _C.test_batch_size = 1
-_C.epoch = 300
+# _C.epoch = 300
+_C.epoch = 1
 _C.learning_rate =  2.5e-5
 _C.learning_rate_warmup = 1e-5
 _C.root = "{}/data/floorplan_v1".format(ROOT) #dir to dataset

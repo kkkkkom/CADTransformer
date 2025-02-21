@@ -47,7 +47,7 @@ def do_eval(model, loaders, logger, cfg):
                             instance_point_dict[gt_class]["min"] = np.minimum(instance_point_dict[gt_class]["min"], pt)
                             instance_point_dict[gt_class]["max"] = np.maximum(instance_point_dict[gt_class]["max"], pt)
 
-                    visualize_points(xy, seg_pred, offset_gt, None, None, None, \
+                    visualize_points(xy, pred_choice, offset_gt, None, None, None, \
                                      "./pred_visualize", basename, instance_point_dict, anno_config.color_pallete)
 
                 for prd, gt in zip(pred_choice, target):

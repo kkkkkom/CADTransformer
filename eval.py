@@ -37,6 +37,8 @@ def do_eval(model, loaders, logger, cfg):
                     for idx, (pt, gt_class) in enumerate(zip(xy, target.cpu().numpy())):
                         if gt_class == 0 or 31 <= gt_class <= 35:  # Skip background or ignored classes
                             continue
+
+                        pt = pt.cpu().numpy()
                         if gt_class not in instance_point_dict:
                             instance_point_dict[gt_class] = {
                                 "point_class": gt_class,

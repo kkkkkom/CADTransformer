@@ -1,8 +1,9 @@
 import os
 from tqdm import tqdm
-from utils.utils_model import get_pred_instance
+from utils.utils_model import get_pred_instance, visualize_points
 from config import anno_config
 import torch
+import numpy as np
 from pdb import set_trace as st
 
 torch.backends.cudnn.benchmark = True
@@ -29,6 +30,25 @@ def do_eval(model, loaders, logger, cfg):
                 pred_choice = seg_pred.data.max(1)[1]
                 # Squeeze
                 xy = xy.squeeze(0)
+
+                if cfg.visualize:
+                    # Build instance_point_dict
+                    instance_point_dict = {}
+                    for idx, (pt, gt_class) in enumerate(zip(xy, target.cpu().numpy())):
+                        if gt_class == 0 or 31 <= gt_class <= 35:  # Skip background or ignored classes
+                            continue
+                        if gt_class not in instance_point_dict:
+                            instance_point_dict[gt_class] = {
+                                "point_class": gt_class,
+                                "min": pt.copy(),
+                                "max": pt.copy(),
+                            }
+                        else:
+                            instance_point_dict[gt_class]["min"] = np.minimum(instance_point_dict[gt_class]["min"], pt)
+                            instance_point_dict[gt_class]["max"] = np.maximum(instance_point_dict[gt_class]["max"], pt)
+
+                    visualize_points(xy, seg_pred, offset_gt, None, None, None, \
+                                     "./pred_visualize", basename, instance_point_dict, anno_config.color_pallete)
 
                 for prd, gt in zip(pred_choice, target):
                     cnt_prd[prd] += 1

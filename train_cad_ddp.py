@@ -55,6 +55,7 @@ def parse_args():
                         help='logging directory')
     parser.add_argument('--seed', type=int, default=304)
     parser.add_argument('--debug', action="store_true")
+    parser.add_argument('--visualize', action="store_true")
     parser.add_argument('opts',
                         help="Modify config options using the command-line",
                         default=None,

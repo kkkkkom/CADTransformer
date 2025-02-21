@@ -69,6 +69,7 @@ _C.load_ckpt = False
 _C.eval_only = False
 _C.test_only = False
 _C.debug = False
+_C.visualize = False
 
 _C.log_dir = f"{ROOT}/logs/release_slim_fc"
 _C.cluster_vis_dir = None
@@ -123,6 +124,9 @@ def update_config(cfg, args):
     if args.debug is not None:
         cfg.defrost()
         cfg.debug = args.debug
+    if args.visualize:
+        cfg.defrost()
+        cfg.visualize = args.visualize
 
     # cfg.cluster_vis_dir = f"{cfg.log_dir}/visualize"
     # cfg.cluster_vis_dir = None

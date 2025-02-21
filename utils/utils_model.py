@@ -45,7 +45,7 @@ def visualize_points(point_set, seg_pred, offset_pred, seg_gt, offset_gt, inst_g
             continue
         color = color_pallete[point_class]
         pts = point_set_noise[idx_center]
-        # print(f"[DEBUG] offset_pred={offset_pred}")
+        print(f"[DEBUGGG] offset_pred={offset_pred.shape}")
         offset = offset_pred[idx_center]
         pts -= offset
         pts = pts.cpu().numpy()

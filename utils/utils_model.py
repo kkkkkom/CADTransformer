@@ -32,7 +32,7 @@ PALLTE = np.array([[255, 255, 255], [128, 0, 0], [0, 128, 0], [0, 0, 128], [128,
 
 
 def visualize_points(point_set, seg_pred, offset_pred, seg_gt, offset_gt, inst_gt, \
-                save_dir, basename, instance_point_dict, color_pallete, re_norm=True):
+                save_dir, root_dir, basename, instance_point_dict, color_pallete, re_norm=True):
     """ visualization """
     os.makedirs(save_dir, exist_ok=True)
     basename = str(basename[0].split(".")[0])
@@ -47,7 +47,7 @@ def visualize_points(point_set, seg_pred, offset_pred, seg_gt, offset_gt, inst_g
         pts = point_set_noise[idx_center]
         # print(f"[DEBUGGG] offset_pred={offset_pred.shape}")
         offset = offset_pred[0][idx_center]
-        pts -= offset
+        pts -= offse
         pts = pts.cpu().numpy()
         if re_norm:
             pts = pts*350 + 350
@@ -55,7 +55,12 @@ def visualize_points(point_set, seg_pred, offset_pred, seg_gt, offset_gt, inst_g
         cv2.circle(img, pts, 2, color)
     cv2.imwrite(os.path.join(save_dir, "{}_{}_pred.png".format(basename, point_set.shape[0])), img)
 
-    img = np.zeros((700, 700, 3))
+    # img = np.zeros((700, 700, 3))
+    image_path = root_dir/basename
+    image = cv2.imread(image_path)  # Read as BGR
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # Convert to RGB
+    resized_image = cv2.resize(image, (700, 700), interpolation=cv2.INTER_LINEAR)
+    img = np.array(resized_image)
     for key, val in instance_point_dict.items():
         point_class = instance_point_dict[key]["point_class"]
         if point_class == 0 or 31<=point_class<=35:

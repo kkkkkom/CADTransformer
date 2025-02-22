@@ -5,6 +5,7 @@ from config import anno_config
 import torch
 import numpy as np
 from pdb import set_trace as st
+from pathlib import Path
 
 torch.backends.cudnn.benchmark = True
 torch.autograd.set_detect_anomaly(True)
@@ -21,6 +22,12 @@ def do_eval(model, loaders, logger, cfg):
         cnt_prd, cnt_gt, cnt_tp = \
             [torch.Tensor([0 for x in range(0, class_num+1)]).cuda() for _ in range(3)]
         valid_list = []
+        split = "train"
+        if cfg.test_only:
+            split="test"
+        if cfg.val_only:
+            split="val"
+        root_dir = Path(f"/kaggle/input/cadtransformer-processed/processed/png/{split}")
         with tqdm(loaders, total=len(loaders), smoothing=0.9) as _tqdm:
             for i, (image, xy, target, rgb_info, nns, offset_gt, inst_gt, index, basename) in enumerate(_tqdm):
                 seg_pred = model(image, xy, rgb_info, nns)
@@ -52,7 +59,7 @@ def do_eval(model, loaders, logger, cfg):
                     # logger.info(f"\n[DEBUG] i: {i}, xy: {xy.shape}, offset_gt: {offset_gt.shape}")
                     # logger.info(f"[DEBUG] offset_gt={offset_gt}")
                     visualize_points(xy, pred_choice, offset_gt, None, None, None, \
-                                     "./pred_visualize", basename, instance_point_dict, anno_config.color_pallete)
+                                     "./pred_visualize", root_dir, basename, instance_point_dict, anno_config.color_pallete)
 
                 for prd, gt in zip(pred_choice, target):
                     cnt_prd[prd] += 1

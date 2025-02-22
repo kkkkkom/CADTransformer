@@ -57,6 +57,7 @@ def visualize_points(point_set, seg_pred, offset_pred, seg_gt, offset_gt, inst_g
 
     # img = np.zeros((700, 700, 3))
     image_path = root_dir/basename
+    print(f"\n[DEBUG] Reading image {image_path} ..")
     image = cv2.imread(image_path)  # Read as BGR
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # Convert to RGB
     resized_image = cv2.resize(image, (700, 700), interpolation=cv2.INTER_LINEAR)

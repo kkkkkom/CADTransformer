@@ -25,7 +25,7 @@ def do_eval(model, loaders, logger, cfg):
         split = "train"
         if cfg.test_only:
             split="test"
-        if cfg.val_only:
+        if cfg.eval_only:
             split="val"
         root_dir = Path(f"/kaggle/input/cadtransformer-processed/processed/png/{split}")
         with tqdm(loaders, total=len(loaders), smoothing=0.9) as _tqdm:

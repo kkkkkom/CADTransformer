@@ -46,15 +46,20 @@ def do_eval(model, loaders, logger, cfg):
                             continue
 
                         pt = pt.cpu().numpy()
-                        if gt_class not in instance_point_dict:
-                            instance_point_dict[gt_class] = {
-                                "point_class": gt_class,
-                                "min": pt.copy(),
-                                "max": pt.copy(),
-                            }
-                        else:
-                            instance_point_dict[gt_class]["min"] = np.minimum(instance_point_dict[gt_class]["min"], pt)
-                            instance_point_dict[gt_class]["max"] = np.maximum(instance_point_dict[gt_class]["max"], pt)
+                        instance_point_dict[idx] = {
+                            "point_class": gt_class,
+                            "min": pt.copy(),
+                            "max": pt.copy(),
+                        }
+                        # if gt_class not in instance_point_dict:
+                        #     instance_point_dict[gt_class] = {
+                        #         "point_class": gt_class,
+                        #         "min": pt.copy(),
+                        #         "max": pt.copy(),
+                        #     }
+                        # else:
+                        #     instance_point_dict[gt_class]["min"] = np.minimum(instance_point_dict[gt_class]["min"], pt)
+                        #     instance_point_dict[gt_class]["max"] = np.maximum(instance_point_dict[gt_class]["max"], pt)
 
                     # logger.info(f"\n[DEBUG] i: {i}, xy: {xy.shape}, offset_gt: {offset_gt.shape}")
                     # logger.info(f"[DEBUG] offset_gt={offset_gt}")

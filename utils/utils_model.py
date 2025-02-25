@@ -53,7 +53,7 @@ def visualize_points(point_set, seg_pred, offset_pred, seg_gt, offset_gt, inst_g
         pts = point_set_noise[idx_center]
         # print(f"[DEBUGGG] offset_pred={offset_pred.shape}")
         offset = offset_pred[0][idx_center]
-        pts -= offset
+        # pts -= offset
         pts = pts.cpu().numpy()
         if re_norm:
             pts = pts*350 + 350

@@ -30,7 +30,6 @@ def do_eval(model, loaders, logger, cfg):
         root_dir = Path(f"/kaggle/input/cadtransformer-processed/processed/png/{split}")
         with tqdm(loaders, total=len(loaders), smoothing=0.9) as _tqdm:
             for i, (image, xy, target, rgb_info, nns, offset_gt, inst_gt, index, basename) in enumerate(_tqdm):
-                if i>0: break
                 seg_pred = model(image, xy, rgb_info, nns)
                 seg_pred = seg_pred.contiguous().view(-1, cfg.num_class+1)
                 # logger.info(f"\n[DEBUG] Pre: i={i}, inst_gt={inst_gt.shape}")
@@ -69,6 +68,8 @@ def do_eval(model, loaders, logger, cfg):
                     # logger.info(f"[DEBUG] offset_gt={offset_gt}")
                     visualize_points(xy, pred_choice, offset_gt, None, None, None, \
                                      "./pred_visualize", root_dir, basename, instance_point_dict, anno_config.color_pallete)
+
+                break
 
                 for prd, gt in zip(pred_choice, target):
                     cnt_prd[prd] += 1

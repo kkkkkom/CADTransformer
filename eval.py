@@ -30,9 +30,10 @@ def do_eval(model, loaders, logger, cfg):
         root_dir = Path(f"/kaggle/input/cadtransformer-processed/processed/png/{split}")
         with tqdm(loaders, total=len(loaders), smoothing=0.9) as _tqdm:
             for i, (image, xy, target, rgb_info, nns, offset_gt, inst_gt, index, basename) in enumerate(_tqdm):
+                if i>0: break
                 seg_pred = model(image, xy, rgb_info, nns)
                 seg_pred = seg_pred.contiguous().view(-1, cfg.num_class+1)
-                logger.info(f"\n[DEBUG] Pre: i={i}, inst_gt={inst_gt.shape}")
+                # logger.info(f"\n[DEBUG] Pre: i={i}, inst_gt={inst_gt.shape}")
                 index = index.contiguous().view(-1).cpu().numpy()
                 target = target.view(-1, 1)[:, 0]
                 pred_choice = seg_pred.data.max(1)[1]
@@ -47,6 +48,7 @@ def do_eval(model, loaders, logger, cfg):
                             continue
 
                         inst_idx = inst_gt[0][idx][0]
+                        logger.info(f"[DEBUG] idx={idx}, inst_idx={inst_idx}")
                         pt = pt.cpu().numpy()
                         # instance_point_dict[idx] = {
                         #     "point_class": gt_class,

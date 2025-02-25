@@ -32,9 +32,8 @@ def do_eval(model, loaders, logger, cfg):
             for i, (image, xy, target, rgb_info, nns, offset_gt, inst_gt, index, basename) in enumerate(_tqdm):
                 seg_pred = model(image, xy, rgb_info, nns)
                 seg_pred = seg_pred.contiguous().view(-1, cfg.num_class+1)
-                logger.info(f"\n[DEBUG] Pre: i={i}, index={index}")
+                logger.info(f"\n[DEBUG] Pre: i={i}, inst_gt={inst_gt}")
                 index = index.contiguous().view(-1).cpu().numpy()
-                logger.info(f"[DEBUG] Post: i={i}, index={index.tolist()}, type={type(index)}")
                 target = target.view(-1, 1)[:, 0]
                 pred_choice = seg_pred.data.max(1)[1]
                 # Squeeze

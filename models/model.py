@@ -116,7 +116,7 @@ class CADTransformer(nn.Module):
             self.last_linear = nn.Linear(self.inter_dim*2, self.n_c)
 
     def forward(self, image, xy, _, nns):
-        nns = torch.zeros_like(nns, device="cuda")
+        # nns = torch.zeros_like(nns, device="cuda")
         xy_embed = self.input_embed(image, xy)
         xy_embed = self.fc_bottleneck(xy_embed)
 

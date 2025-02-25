@@ -33,6 +33,7 @@ def do_eval(model, loaders, logger, cfg):
                 seg_pred = model(image, xy, rgb_info, nns)
                 seg_pred = seg_pred.contiguous().view(-1, cfg.num_class+1)
                 index = index.contiguous().view(-1).cpu().numpy()
+                logger.info(f"\n[DEBUG] i={i}, index={index}")
                 target = target.view(-1, 1)[:, 0]
                 pred_choice = seg_pred.data.max(1)[1]
                 # Squeeze

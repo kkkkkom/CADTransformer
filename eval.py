@@ -30,9 +30,9 @@ def do_eval(model, loaders, logger, cfg):
         root_dir = Path(f"/kaggle/input/cadtransformer-processed/processed/png/{split}")
         with tqdm(loaders, total=len(loaders), smoothing=0.9) as _tqdm:
             for i, (image, xy, target, rgb_info, nns, offset_gt, inst_gt, index, basename) in enumerate(_tqdm):
-                if i>5: break
-                logger.info(f"[DEBUG] nns shape: {nns.shape}")
-                logger.info(f"[DEBUG] nns={nns}")
+                # if i>5: break
+                # logger.info(f"[DEBUG] nns shape: {nns.shape}")
+                # logger.info(f"[DEBUG] nns={nns}")
 
                 seg_pred = model(image, xy, rgb_info, nns)
                 seg_pred = seg_pred.contiguous().view(-1, cfg.num_class+1)

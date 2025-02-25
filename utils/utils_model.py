@@ -58,7 +58,8 @@ def visualize_points(point_set, seg_pred, offset_pred, seg_gt, offset_gt, inst_g
         if re_norm:
             pts = pts*350 + 350
         pts = [int(p) for p in pts]
-        cv2.circle(img, pts, 2, color)
+        # cv2.circle(img, pts, 2, color)
+        cv2.circle(img, pts, 1, color, -1)
     cv2.imwrite(os.path.join(save_dir, "{}_{}_pred.png".format(basename, point_set.shape[0])), img)
 
     # img = np.zeros((700, 700, 3))

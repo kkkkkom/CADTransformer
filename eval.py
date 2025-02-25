@@ -46,21 +46,22 @@ def do_eval(model, loaders, logger, cfg):
                         if gt_class == 0 or 31 <= gt_class <= 35:  # Skip background or ignored classes
                             continue
 
+                        inst_idx = inst_gt[0][idx][0]
                         pt = pt.cpu().numpy()
-                        instance_point_dict[idx] = {
-                            "point_class": gt_class,
-                            "min": pt.copy(),
-                            "max": pt.copy(),
-                        }
-                        # if gt_class not in instance_point_dict:
-                        #     instance_point_dict[gt_class] = {
-                        #         "point_class": gt_class,
-                        #         "min": pt.copy(),
-                        #         "max": pt.copy(),
-                        #     }
-                        # else:
-                        #     instance_point_dict[gt_class]["min"] = np.minimum(instance_point_dict[gt_class]["min"], pt)
-                        #     instance_point_dict[gt_class]["max"] = np.maximum(instance_point_dict[gt_class]["max"], pt)
+                        # instance_point_dict[idx] = {
+                        #     "point_class": gt_class,
+                        #     "min": pt.copy(),
+                        #     "max": pt.copy(),
+                        # }
+                        if inst_idx not in instance_point_dict:
+                            instance_point_dict[inst_idx] = {
+                                "point_class": gt_class,
+                                "min": pt.copy(),
+                                "max": pt.copy(),
+                            }
+                        else:
+                            instance_point_dict[inst_idx]["min"] = np.minimum(instance_point_dict[inst_idx]["min"], pt)
+                            instance_point_dict[inst_idx]["max"] = np.maximum(instance_point_dict[inst_idx]["max"], pt)
 
                     # logger.info(f"\n[DEBUG] i: {i}, xy: {xy.shape}, offset_gt: {offset_gt.shape}")
                     # logger.info(f"[DEBUG] offset_gt={offset_gt}")

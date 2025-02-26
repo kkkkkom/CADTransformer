@@ -121,6 +121,7 @@ class CADDataLoader(Dataset):
 
         nns = adj_node_classes["nns"]
         nns = torch.from_numpy(np.array(nns, dtype=np.long)).cuda()
+        nns = torch.zeros_like(nns, device="cuda")
 
         instance = adj_node_classes["inst"]
         instance_center = self.get_instance_center_tensor(instance, center, semantic=target, img_path=img_path)

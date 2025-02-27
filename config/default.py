@@ -126,6 +126,7 @@ def update_config(cfg, args):
     if args.visualize:
         cfg.defrost()
         cfg.visualize = args.visualize
+    cfg.epoch = args.epoch
 
     # cfg.cluster_vis_dir = f"{cfg.log_dir}/visualize"
     # cfg.cluster_vis_dir = None

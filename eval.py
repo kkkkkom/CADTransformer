@@ -34,6 +34,8 @@ def do_eval(model, loaders, logger, cfg):
                 # logger.info(f"[DEBUG] nns shape: {nns.shape}")
                 # logger.info(f"[DEBUG] nns={nns}")
 
+                nns = torch.zeros_like(nns, device="cuda")
+
                 seg_pred = model(image, xy, rgb_info, nns)
                 seg_pred = seg_pred.contiguous().view(-1, cfg.num_class+1)
                 # logger.info(f"\n[DEBUG] Pre: i={i}, inst_gt={inst_gt.shape}")

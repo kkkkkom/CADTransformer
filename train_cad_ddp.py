@@ -56,6 +56,7 @@ def parse_args():
     parser.add_argument('--seed', type=int, default=304)
     parser.add_argument('--debug', action="store_true")
     parser.add_argument('--visualize', action="store_true")
+    parser.add_argument('--epoch', type=int, default=1)
     parser.add_argument('opts',
                         help="Modify config options using the command-line",
                         default=None,
@@ -169,6 +170,7 @@ def main():
     global_epoch = 0
 
     print("> start epoch", start_epoch)
+    logger.info(f"[DEBUG] cfg.epoch={cfg.epoch}")
     for epoch in range(start_epoch, cfg.epoch):
         logger.info(f"=> {cfg.log_dir}")
 

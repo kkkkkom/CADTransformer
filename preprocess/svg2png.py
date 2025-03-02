@@ -98,7 +98,7 @@ def scaleSVG(svg_path, scale, cvt_color=False):
     '''
     out_path = svg_path
     subprocess.run(
-        f'inkscape - -actions = "select-all:all;transform-scale:{scale},{scale};fit-canvas-to-selection;export-filename:{out_path};export-do" {svg_path}',
+        f'inkscape --actions="select-all:all;transform-scale:{scale},{scale};fit-canvas-to-selection;export-filename:{out_path};export-do" {svg_path}',
         shell=True)
     return out_path
 

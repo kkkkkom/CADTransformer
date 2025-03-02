@@ -344,6 +344,7 @@ def svg2png(svg_path, png_path, background_color="white", scale=1):
     '''
     Convert svg to png
     '''
+    print(f"[DEBUG] svg2png: {svg_path} -> {png_path}")
     # cairosvg.svg2png(url=svg_path, write_to=png_path, background_color="white")
     command = "cairosvg {} -o {} -b {} -s {}".format(svg_path, png_path, background_color, scale)
     os.system(command)
@@ -374,6 +375,7 @@ def svg_reader(svg_path):
     return svg_list
 
 def svg_writer(svg_list, svg_path):
+    group = None  # Initialize group to avoid referencing before assignment
     for idx, line in enumerate(svg_list):
         tag = line["tag"]
         line.pop("tag")
@@ -385,7 +387,10 @@ def svg_writer(svg_list, svg_path):
                 group = ET.SubElement(root, tag)
                 group.attrib = line
             else:
-                node = ET.SubElement(group, tag)
+                if group is None:  # Ensure group is not None
+                    node = ET.SubElement(root, tag)  # Add directly to root
+                else:
+                    node = ET.SubElement(group, tag)  # Add to last group
                 node.attrib = line
     # rawtext = ET.tostring(root)
     # dom = minidom.parseString(rawtext)

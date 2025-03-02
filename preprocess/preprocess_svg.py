@@ -62,6 +62,7 @@ def get_nn(segments, max_degree=4):
 def svg2graph(svg_path, output_dir, max_degree, visualize):
     '''Construct the graph of each drawing
     '''
+    print(f"[DEBUG] Processing {svg_path} ..")
     tree = ET.parse(svg_path)
     root = tree.getroot()
     ns = root.tag[:-3]
@@ -85,9 +86,12 @@ def svg2graph(svg_path, output_dir, max_degree, visualize):
                 raise RuntimeError("Parse path failed!{}, {}".format(svg_path, path.attrib['d']))
             start = path_repre.point(0)
             end = path_repre.point(1)
+            if start==end:
+                continue
             segments.append([start.real, start.imag,
                 end.real, end.imag])
             # starts_ends.append([start.real, start.imag, end.real, end.imag, end.real, end.imag, start.real, start.imag])
+            # print(f"[DEBUG] path={path_repre}")
             mid = path_repre.point(0.5)
             # length = math.sqrt((start.real - end.real) ** 2 + (start.imag - end.imag) ** 2)
             length = path_repre.length()
@@ -137,6 +141,8 @@ def svg2graph(svg_path, output_dir, max_degree, visualize):
                 instances.append([int(ellipse.attrib['instanceId'])])
             else:
                 instances.append([-1])
+
+    print(f"[DEBUG] Finished parsing.")
 
     segments = np.array(segments)
     nns = get_nn(copy.deepcopy(segments), max_degree=max_degree)

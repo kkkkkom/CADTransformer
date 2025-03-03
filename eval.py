@@ -27,7 +27,8 @@ def do_eval(model, loaders, logger, cfg):
             split="test"
         if cfg.eval_only:
             split="val"
-        root_dir = Path(f"/kaggle/input/cadtransformer-processed/processed/png/{split}")
+        # root_dir = Path(f"/kaggle/input/cadtransformer-processed/processed/png/{split}")
+        root_dir = Path(cfg.root) / f"png/{split}"
         with tqdm(loaders, total=len(loaders), smoothing=0.9) as _tqdm:
             for i, (image, xy, target, rgb_info, nns, offset_gt, inst_gt, index, basename) in enumerate(_tqdm):
                 # if i>5: break

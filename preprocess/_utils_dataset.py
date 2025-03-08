@@ -9,6 +9,10 @@ from xml.dom import minidom
 import xml.etree.ElementTree as ET
 import pandas as pd
 from svgpathtools import parse_path
+import subprocess
+import cairosvg
+import cairo
+
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(BASE_DIR, "../", ))
 sys.path.append(os.path.join(BASE_DIR, "."))
@@ -340,7 +344,7 @@ def getAllInstanceId(svg_list):
                 inst_dict[line["instance-id"]].append(line)
     return inst_dict
 
-def svg2png(svg_path, png_path, background_color="white", scale=1):
+def svg2png_bak(svg_path, png_path, background_color="white", scale=1):
     '''
     Convert svg to png
     '''
@@ -349,6 +353,10 @@ def svg2png(svg_path, png_path, background_color="white", scale=1):
     command = "cairosvg {} -o {} -b {} -s {}".format(svg_path, png_path, background_color, scale)
     os.system(command)
     time.sleep(0.03)
+
+def svg2png(svg_path, png_path, background_color="white", scale=1, sleep=0.03):
+    cmd = f'inkscape --actions="export-filename:{png_path};export-background:white;export-width:980;export-png-antialias:0;export-do" {svg_path}'
+    subprocess.run(cmd, shell=True)
 
 def init_worker():
     '''

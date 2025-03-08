@@ -93,6 +93,7 @@ class CADDataLoader(Dataset):
         return self.length
 
     def _get_item(self, index):
+        device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         img_path = self.image_path_list[index]
         ann_path = self.anno_path_list[index]
         assert os.path.basename(img_path).split(".")[0] == \
@@ -105,22 +106,22 @@ class CADDataLoader(Dataset):
         adj_node_classes = np.load(ann_path, \
                                    allow_pickle=True).item()
         target = adj_node_classes["cat"]
-        target = torch.from_numpy(np.array(target, dtype=np.long)).cuda()
+        target = torch.from_numpy(np.array(target, dtype=np.long)).to(device)
 
         center = adj_node_classes["ct_norm"]
-        xy = torch.from_numpy(np.array(center, dtype=np.float32)).cuda()
+        xy = torch.from_numpy(np.array(center, dtype=np.float32)).to(device)
 
         self.rgb_dim = 0
         if self.rgb_dim > 0:
             rgb_npy_path = ann_path.replace('/npy/', '/npy_rgb/')
             # rgb_npy_path = ann_path.replace('/npy/', '/npy/')
             rgb_info = np.load(rgb_npy_path, allow_pickle=True).item()['rgbs']
-            rgb_info = torch.from_numpy(np.array(rgb_info, dtype=np.long)).cuda()
+            rgb_info = torch.from_numpy(np.array(rgb_info, dtype=np.long)).to(device)
         else:
             rgb_info = xy
 
         nns = adj_node_classes["nns"]
-        nns = torch.from_numpy(np.array(nns, dtype=np.long)).cuda()
+        nns = torch.from_numpy(np.array(nns, dtype=np.long)).to(device)
         # nns = torch.zeros_like(nns, device="cuda")
 
         instance = adj_node_classes["inst"]
@@ -128,7 +129,7 @@ class CADDataLoader(Dataset):
         instance = torch.from_numpy(np.array(instance, dtype=np.float32)).cuda()
         offset = xy - instance_center
 
-        indexes = torch.Tensor([1]).cuda()
+        indexes = torch.Tensor([1]).to(device)
         basename = os.path.basename(img_path)
 
         return image, xy, target, rgb_info, nns, offset, instance, indexes, basename
@@ -195,6 +196,7 @@ class CADDataLoader(Dataset):
         self.anno_path_list.extend(self.anno_path_list_aux)
 
     def get_instance_center_tensor(self, instance, center, semantic=None, img_path=None):
+        device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         offset_list = []
         offset_dict = {}
         for idx, inst_num in enumerate(instance):
@@ -225,7 +227,7 @@ class CADDataLoader(Dataset):
                     offset_list.append([offset_dict[inst_val]["mean"][0], offset_dict[inst_val]["mean"][1]])
                 except:
                     st()
-        instance_center = torch.from_numpy(np.array(offset_list, dtype=np.float32)).cuda()
+        instance_center = torch.from_numpy(np.array(offset_list, dtype=np.float32)).to(device)
         return instance_center
 
 

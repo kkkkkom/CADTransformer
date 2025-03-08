@@ -48,6 +48,17 @@ def pixel_is_non_white(pixel):
             return True
     return False
 
+def is_too_close(new_point, existing_points, min_distance):
+    for point in existing_points:
+        if np.linalg.norm(np.array(new_point) - np.array(point)) < min_distance:
+            return True
+    return False
+
+def is_point_too_close(new_point, existing_point, min_distance):
+    if np.linalg.norm(np.array(new_point) - np.array(existing_point)) < min_distance:
+        return True
+    return False
+
 def png2npy(png_path, output_dir, counter, lock, total_cnt):
     with lock:
         counter.value += 1
@@ -76,6 +87,27 @@ def png2npy(png_path, output_dir, counter, lock, total_cnt):
             )
             nns.append([0])
             instances.append([-1])
+
+    ### filter to reduce density ###
+    len0 = len(nodes)
+    min_distance = 8
+    for _ in range(1024):
+        if len(nodes) < len0/8:
+            break
+        for i in range(len(nodes)-1, -1, -1):
+            for j in range(i-1,-1,-1):
+                if classes[i]!=classes[j]:
+                    continue
+                if is_point_too_close(centers[i], centers[j], min_distance):
+                    nodes.pop(i)
+                    centers.pop(i)
+                    classes.pop(i)
+                    centers_norm.pop(i)
+                    nns.pop(i)
+                    instances.pop(i)
+                    break
+        min_distance*=2
+    #########
 
     data_gcn = {
         "nd_ft": nodes,

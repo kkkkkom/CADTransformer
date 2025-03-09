@@ -1,4 +1,6 @@
 import logging
+import multiprocessing
+
 from PIL import Image
 import math
 import numpy as np
@@ -91,22 +93,37 @@ def png2npy(png_path, output_dir, counter, lock, total_cnt):
     ### filter to reduce density ###
     len0 = len(nodes)
     min_distance = 8
+    kept_indices = list(range(len0))
     for _ in range(1024):
+        if min_distance > width/2:
+            break
         if len(nodes) < len0/8:
             break
-        for i in range(len(nodes)-1, -1, -1):
-            for j in range(i-1,-1,-1):
+        new_kept_indices = []
+        for i in kept_indices:
+            keep = True
+            for j in new_kept_indices:
                 if classes[i]!=classes[j]:
                     continue
                 if is_point_too_close(centers[i], centers[j], min_distance):
-                    nodes.pop(i)
-                    centers.pop(i)
-                    classes.pop(i)
-                    centers_norm.pop(i)
-                    nns.pop(i)
-                    instances.pop(i)
+                    keep = False
                     break
+            if keep:
+                new_kept_indices.append(i)
+        # nodes = [nodes[i] for i in kept_indices]
+        # centers = [centers[i] for i in kept_indices]
+        # classes = [classes[i] for i in kept_indices]
+        # centers_norm = [centers_norm[i] for i in kept_indices]
+        # nns = [nns[i] for i in kept_indices]
+        # instances = [instances[i] for i in kept_indices]
+        kept_indices = new_kept_indices
         min_distance*=2
+    nodes = [nodes[i] for i in kept_indices]
+    centers = [centers[i] for i in kept_indices]
+    classes = [classes[i] for i in kept_indices]
+    centers_norm = [centers_norm[i] for i in kept_indices]
+    nns = [nns[i] for i in kept_indices]
+    instances = [instances[i] for i in kept_indices]
     #########
 
     data_gcn = {
@@ -120,21 +137,22 @@ def png2npy(png_path, output_dir, counter, lock, total_cnt):
     np.save(npy_path, data_gcn)
 
 if __name__ == "__main__":
-    splits = ["train"]
+    splits = ["val"]
 
     for split in splits:
-        all_png_paths = list(Path(f"./processed/png_colored/{split}").glob("*.png"))[:]
+        all_png_paths = list(Path(f"./processed/png_colored/{split}").glob("*.png"))[750:790]
 
         total_cnt = len(all_png_paths)
         out_dir = Path(f"./processed/npy_pixeled/{split}")
         out_dir.mkdir(exist_ok=True, parents=True)
 
         manager = Manager()
-        counter = manager.Value("i", 0)  # Shared counter
+        counter = manager.Value("i", 750)  # Shared counter
         lock = manager.Lock()  # Shared lock for synchronization
 
         # Initialize the worker processes with the shared counter and lock
-        with Pool(32, init_worker) as p:
+        # with Pool(32, init_worker) as p:
+        with Pool(multiprocessing.cpu_count(), init_worker) as p:
             try:
                 # Use partial to bind counter, lock, and total_cnt
                 func = partial(

@@ -105,6 +105,7 @@ def do_eval(model, loaders, logger, cfg):
 
 
 def get_eval_criteria(epoch):
+    return True
     eval = False
     if epoch < 50:
         if epoch % 5 == 0:

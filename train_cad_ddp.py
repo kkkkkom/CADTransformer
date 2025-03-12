@@ -119,7 +119,7 @@ def main():
             exit(0)
 
     if cfg.resume_ckpt != '':
-        if os.path.exists(cfg.load_ckpt):
+        if os.path.exists(cfg.resume_ckpt):
             checkpoint = torch.load(cfg.resume_ckpt, map_location=torch.device("cpu"))
             start_epoch = checkpoint['epoch']
             model.load_state_dict(checkpoint['model_state_dict'])

@@ -15,6 +15,74 @@ torch.autograd.set_detect_anomaly(True)
 num_gpus = int(os.environ["WORLD_SIZE"]) if "WORLD_SIZE" in os.environ else 1
 distributed = num_gpus > 1
 
+from pathlib import Path
+import os
+import shutil
+import json
+import subprocess
+
+
+def get_kaggle_username():
+    with open("/kaggle/input/api-token/kaggle.json") as f:
+        kaggle_json = json.load(f)
+    username = kaggle_json["username"]
+    return username
+
+
+def create_kaggle_metadata(title):
+    # if Path("/kaggle").exists():
+    os.makedirs("/root/.kaggle/", exist_ok=True)
+    shutil.copy("/kaggle/input/api-token/kaggle.json", "/root/.kaggle/kaggle.json")
+    os.chmod("/root/.kaggle/kaggle.json", 600)
+    username = get_kaggle_username()
+    dataset_metadata = {
+        "title": title,
+        "id": f"{username}/{title}",
+        "licenses": [{"name": "unknown"}],
+    }
+    with open("/kaggle/working/dataset-metadata.json", "w") as f:
+        json.dump(dataset_metadata, f)
+    return dataset_metadata
+
+
+def dataset_exists(dataset_id):
+    username = get_kaggle_username()
+    result = subprocess.run(
+        ["kaggle", "datasets", "list", "--user", username, "--search", dataset_id],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    output = result.stdout.decode("utf-8")
+    return dataset_id in output
+
+
+def save_kaggle_dataset(dataset_metadata, source_dir):
+    zip_path = f"{Path(source_dir).name}.zip"
+    res = subprocess.run(f"zip -r {zip_path} {source_dir}", shell=True, stderr=subprocess.STDOUT)
+    print(f"[DEBUG] zip res: {res.returncode}")
+    res = subprocess.run(f"mkdir -p tmp_zip_dir", shell=True, stderr=subprocess.STDOUT)
+    print(f"[DEBUG] mkdir res: {res.returncode}")
+    res = subprocess.run(f"mv {zip_path} tmp_zip_dir/", shell=True, stderr=subprocess.STDOUT)
+    print(f"[DEBUG] mv res: {res.returncode}")
+    shutil.move("/kaggle/working/dataset-metadata.json", "tmp_zip_dir/dataset-metadata.json")
+    # if Path("/kaggle").exists():
+    if not dataset_exists(dataset_metadata["id"]):
+        print(f"[DEBUG] Creating new dataset ..")
+        kaggle_cmd = f"kaggle datasets create -p tmp_zip_dir --dir-mode zip"
+    else:
+        print(f"[DEBUG] Updating dataset ..")
+        kaggle_cmd = f'kaggle datasets version -p tmp_zip_dir --dir-mode zip -m "Updated model with new training" --delete-old-versions'
+    result = subprocess.run(kaggle_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    output = result.stdout.decode()
+    error = result.stderr.decode()
+    print(output)
+    print(error)
+    print(f"[DEBUG] Dataset saved.")
+
+
+print("Import Done.")
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description='Train segmentation network')
     parser.add_argument('--cfg',
@@ -65,6 +133,7 @@ def parse_args():
     # args.local_rank = os.environ['LOCAL_RANK']
     return args
 
+
 def main():
     args = parse_args()
     print(f"[DEBUG] args={args}")
@@ -72,11 +141,11 @@ def main():
 
     os.makedirs(cfg.log_dir, exist_ok=True)
     if cfg.eval_only:
-        logger= create_logger(cfg.log_dir, 'val')
+        logger = create_logger(cfg.log_dir, 'val')
     elif cfg.test_only:
-        logger= create_logger(cfg.log_dir, 'test')
+        logger = create_logger(cfg.log_dir, 'test')
     else:
-        logger= create_logger(cfg.log_dir, 'train')
+        logger = create_logger(cfg.log_dir, 'train')
 
     # Distributed Train Config
     torch.cuda.set_device(args.local_rank)
@@ -137,8 +206,8 @@ def main():
     torch.multiprocessing.set_start_method('spawn', force=True)
     val_dataset = CADDataLoader(split='val', do_norm=cfg.do_norm, cfg=cfg)
     val_dataloader = DataLoaderX(args.local_rank, dataset=val_dataset,
-                                batch_size=cfg.test_batch_size, shuffle=False,
-                                num_workers=cfg.WORKERS, drop_last=False)
+                                 batch_size=cfg.test_batch_size, shuffle=False,
+                                 num_workers=cfg.WORKERS, drop_last=False)
     # Eval Only
     if args.local_rank == 0:
         if cfg.eval_only:
@@ -147,8 +216,8 @@ def main():
 
     test_dataset = CADDataLoader(split='test', do_norm=cfg.do_norm, cfg=cfg)
     test_dataloader = DataLoaderX(args.local_rank, dataset=test_dataset,
-                                 batch_size=cfg.test_batch_size, shuffle=False,
-                                 num_workers=cfg.WORKERS, drop_last=False)
+                                  batch_size=cfg.test_batch_size, shuffle=False,
+                                  num_workers=cfg.WORKERS, drop_last=False)
     # Test Only
     if args.local_rank == 0:
         if cfg.test_only:
@@ -158,8 +227,8 @@ def main():
     train_dataset = CADDataLoader(split='train', do_norm=cfg.do_norm, cfg=cfg)
     train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset, shuffle=True)
     train_dataloader = DataLoaderX(args.local_rank, dataset=train_dataset,
-                                  sampler=train_sampler, batch_size=cfg.batch_size,
-                                  num_workers=cfg.WORKERS, drop_last=True)
+                                   sampler=train_sampler, batch_size=cfg.batch_size,
+                                   num_workers=cfg.WORKERS, drop_last=True)
 
     def bn_momentum_adjust(m, momentum):
         if isinstance(m, torch.nn.BatchNorm2d) or isinstance(m, torch.nn.BatchNorm1d):
@@ -197,7 +266,7 @@ def main():
                 optimizer.zero_grad()
 
                 seg_pred = model(image, xy, rgb_info, nns)
-                seg_pred = seg_pred.contiguous().view(-1, cfg.num_class+1)
+                seg_pred = seg_pred.contiguous().view(-1, cfg.num_class + 1)
                 target = target.view(-1, 1)[:, 0]
 
                 loss_seg = CE_loss(seg_pred, target)
@@ -221,6 +290,10 @@ def main():
                 'optimizer_state_dict': optimizer.state_dict(),
             }
             torch.save(state, savepath)
+
+            metadata = create_kaggle_metadata("cadtransformer-model-only-no-nns-rename")
+            save_kaggle_dataset(metadata, "/kaggle/working/CADTransformer/logs")
+
         # assert validation?
         eval = get_eval_criteria(epoch)
 

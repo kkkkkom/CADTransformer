@@ -85,9 +85,15 @@ print("Import Done.")
 
 
 def custom_collate(batch):
-    tensors, labels = zip(*batch)  # Assuming your dataset returns (tensor, label)
+    # Example: If dataset returns (tensor, label, extra_info)
+    tensors, labels, extra_info = zip(*batch)
     tensors_padded = pad_sequence(tensors, batch_first=True, padding_value=0)
-    return tensors_padded, torch.tensor(labels)
+    return tensors_padded, torch.tensor(labels), extra_info
+
+# def custom_collate(batch):
+#     tensors, labels = zip(*batch)  # Assuming your dataset returns (tensor, label)
+#     tensors_padded = pad_sequence(tensors, batch_first=True, padding_value=0)
+#     return tensors_padded, torch.tensor(labels)
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train segmentation network')

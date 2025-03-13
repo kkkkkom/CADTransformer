@@ -177,7 +177,7 @@ def main():
     args = parse_args()
     print(f"[DEBUG] args={args}")
     cfg = update_config(config, args)
-    print(f"[DEBUG] cfg={cfg}")
+    # print(f"[DEBUG] cfg={cfg}")
 
     os.makedirs(cfg.log_dir, exist_ok=True)
     if cfg.eval_only:

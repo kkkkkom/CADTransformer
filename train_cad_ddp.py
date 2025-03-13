@@ -331,7 +331,10 @@ def main():
             }
             torch.save(state, savepath)
 
-            metadata = create_kaggle_metadata("cadtransformer-model-only-no-nns-rename")
+            debug_suffix = ""
+            if args.debug:
+                debug_suffix = "-debug"
+            metadata = create_kaggle_metadata(f"cadtransformer-model-only-no-nns-rename{debug_suffix}")
             save_kaggle_dataset(metadata, "/kaggle/working/CADTransformer/logs")
 
         # assert validation?

@@ -1,6 +1,6 @@
 import os
 from tqdm import tqdm
-from utils.utils_model import get_pred_instance, visualize_points
+from utils.utils_model import get_pred_instance, visualize_points, device
 from config import anno_config
 import torch
 import numpy as np
@@ -13,14 +13,19 @@ torch.autograd.set_detect_anomaly(True)
 num_gpus = int(os.environ["WORLD_SIZE"]) if "WORLD_SIZE" in os.environ else 1
 distributed = num_gpus > 1
 
+device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
+
 def do_eval(model, loaders, logger, cfg):
     logger.info(f'> Conducting do_eval')
     with torch.no_grad():
         model = model.eval()
         anno_list = anno_config.AnnoList().anno_list_all_reverse
         class_num = len(anno_list)
+        # cnt_prd, cnt_gt, cnt_tp = \
+        #     [torch.Tensor([0 for x in range(0, class_num+1)]).cuda() for _ in range(3)]
         cnt_prd, cnt_gt, cnt_tp = \
-            [torch.Tensor([0 for x in range(0, class_num+1)]).cuda() for _ in range(3)]
+            [torch.Tensor([0 for x in range(0, class_num + 1)]).to(device) for _ in range(3)]
         valid_list = []
         split = "train"
         if cfg.test_only:

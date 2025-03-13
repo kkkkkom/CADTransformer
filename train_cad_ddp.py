@@ -85,11 +85,37 @@ print("Import Done.")
 
 
 def custom_collate(batch):
-    # Example: If dataset returns (tensor, label, extra_info)
-    print(f"[DEBUGGGG] {type(batch)}")
-    tensors, labels, extra_info = zip(*batch)
-    tensors_padded = pad_sequence(tensors, batch_first=True, padding_value=0)
-    return tensors_padded, torch.tensor(labels), extra_info
+    # Unpack all 9 elements separately
+    tensors_0, tensors_1, tensors_2, tensors_3, tensors_4, tensors_5, tensors_6, tensors_7, str_8 = zip(*batch)
+
+    # Example: If some tensors need padding, apply pad_sequence
+    tensors_0 = pad_sequence(tensors_0, batch_first=True, padding_value=0) if isinstance(tensors_0[0],
+                                                                                         torch.Tensor) else torch.stack(
+        tensors_0)
+    tensors_1 = pad_sequence(tensors_1, batch_first=True, padding_value=0) if isinstance(tensors_1[0],
+                                                                                         torch.Tensor) else torch.stack(
+        tensors_1)
+    tensors_2 = pad_sequence(tensors_2, batch_first=True, padding_value=0) if isinstance(tensors_2[0],
+                                                                                         torch.Tensor) else torch.stack(
+        tensors_2)
+    tensors_3 = pad_sequence(tensors_3, batch_first=True, padding_value=0) if isinstance(tensors_3[0],
+                                                                                         torch.Tensor) else torch.stack(
+        tensors_3)
+    tensors_4 = pad_sequence(tensors_4, batch_first=True, padding_value=0) if isinstance(tensors_4[0],
+                                                                                         torch.Tensor) else torch.stack(
+        tensors_4)
+    tensors_5 = pad_sequence(tensors_5, batch_first=True, padding_value=0) if isinstance(tensors_5[0],
+                                                                                         torch.Tensor) else torch.stack(
+        tensors_5)
+    tensors_6 = pad_sequence(tensors_6, batch_first=True, padding_value=0) if isinstance(tensors_6[0],
+                                                                                         torch.Tensor) else torch.stack(
+        tensors_6)
+    tensors_7 = pad_sequence(tensors_7, batch_first=True, padding_value=0) if isinstance(tensors_7[0],
+                                                                                         torch.Tensor) else torch.stack(
+        tensors_7)
+
+    return tensors_0, tensors_1, tensors_2, tensors_3, tensors_4, tensors_5, tensors_6, tensors_7, str_8
+
 
 # def custom_collate(batch):
 #     tensors, labels = zip(*batch)  # Assuming your dataset returns (tensor, label)
@@ -221,7 +247,7 @@ def main():
     val_dataset = CADDataLoader(split='val', do_norm=cfg.do_norm, cfg=cfg)
     val_dataloader = DataLoaderX(args.local_rank, dataset=val_dataset,
                                  batch_size=cfg.test_batch_size, shuffle=False,
-                                 num_workers=cfg.WORKERS, drop_last=False)
+                                 num_workers=cfg.WORKERS, drop_last=False, collate_fn=custom_collate)
     # Eval Only
     if args.local_rank == 0:
         if cfg.eval_only:
@@ -231,7 +257,7 @@ def main():
     test_dataset = CADDataLoader(split='test', do_norm=cfg.do_norm, cfg=cfg)
     test_dataloader = DataLoaderX(args.local_rank, dataset=test_dataset,
                                   batch_size=cfg.test_batch_size, shuffle=False,
-                                  num_workers=cfg.WORKERS, drop_last=False)
+                                  num_workers=cfg.WORKERS, drop_last=False, collate_fn=custom_collate)
     # Test Only
     if args.local_rank == 0:
         if cfg.test_only:
@@ -242,7 +268,7 @@ def main():
     train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset, shuffle=True)
     train_dataloader = DataLoaderX(args.local_rank, dataset=train_dataset,
                                    sampler=train_sampler, batch_size=cfg.batch_size,
-                                   num_workers=cfg.WORKERS, drop_last=True)
+                                   num_workers=cfg.WORKERS, drop_last=True, collate_fn=custom_collate)
 
     def bn_momentum_adjust(m, momentum):
         if isinstance(m, torch.nn.BatchNorm2d) or isinstance(m, torch.nn.BatchNorm1d):

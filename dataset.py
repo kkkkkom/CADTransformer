@@ -127,7 +127,8 @@ class CADDataLoader(Dataset):
 
         instance = adj_node_classes["inst"]
         instance_center = self.get_instance_center_tensor(instance, center, semantic=target, img_path=img_path)
-        instance = torch.from_numpy(np.array(instance, dtype=np.float32)).cuda()
+        # instance = torch.from_numpy(np.array(instance, dtype=np.float32)).cuda()
+        instance = torch.from_numpy(np.array(instance, dtype=np.float32)).to(device)
         offset = xy - instance_center
 
         indexes = torch.Tensor([1]).to(device)

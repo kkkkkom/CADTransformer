@@ -20,6 +20,7 @@ from vit import get_vit
 from timm.models.layers import Mlp
 from pdb import set_trace as st
 
+device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
 def vert_align_custom(feats, verts, interp_mode='bilinear',
     padding_mode='zeros', align_corners=True):
@@ -116,7 +117,8 @@ class CADTransformer(nn.Module):
             self.last_linear = nn.Linear(self.inter_dim*2, self.n_c)
 
     def forward(self, image, xy, _, nns):
-        nns = torch.zeros_like(nns, device="cuda")
+        # nns = torch.zeros_like(nns, device="cuda")
+        nns = torch.zeros_like(nns, device="cuda" if torch.cuda.is_available() else "cpu")
         xy_embed = self.input_embed(image, xy)
         xy_embed = self.fc_bottleneck(xy_embed)
 

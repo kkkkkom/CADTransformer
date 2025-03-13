@@ -41,7 +41,7 @@ def do_eval(model, loaders, logger, cfg):
                 # logger.info(f"[DEBUG] nns={nns}")
 
                 # nns = torch.zeros_like(nns, device="cuda")
-                nns = torch.zeros_like(nns, device="cuda" if torch.cuda.is_available() else "cpu")
+                # nns = torch.zeros_like(nns, device="cuda" if torch.cuda.is_available() else "cpu")
 
                 seg_pred = model(image, xy, rgb_info, nns)
                 seg_pred = seg_pred.contiguous().view(-1, cfg.num_class+1)

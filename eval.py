@@ -1,6 +1,6 @@
 import os
 from tqdm import tqdm
-from utils.utils_model import get_pred_instance, visualize_points, device
+from utils.utils_model import get_pred_instance, visualize_points, visualize_points_rename, device
 from config import anno_config
 import torch
 import numpy as np
@@ -79,7 +79,7 @@ def do_eval(model, loaders, logger, cfg):
 
                     # logger.info(f"\n[DEBUG] i: {i}, xy: {xy.shape}, offset_gt: {offset_gt.shape}")
                     # logger.info(f"[DEBUG] offset_gt={offset_gt}")
-                    visualize_points(xy, pred_choice, offset_gt, None, None, None, \
+                    visualize_points_rename(xy, pred_choice, offset_gt, None, None, None, \
                                      "./pred_visualize", root_dir, basename, instance_point_dict, anno_config.color_pallete)
 
                 for prd, gt in zip(pred_choice, target):

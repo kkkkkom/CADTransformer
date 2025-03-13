@@ -68,10 +68,10 @@ def save_kaggle_dataset(dataset_metadata, source_dir):
     shutil.move("/kaggle/working/dataset-metadata.json", "tmp_zip_dir/dataset-metadata.json")
     # if Path("/kaggle").exists():
     if not dataset_exists(dataset_metadata["id"]):
-        print(f"[DEBUG] Creating new dataset ..")
+        print(f"[DEBUG] Creating new dataset {dataset_metadata["id"]} ..")
         kaggle_cmd = f"kaggle datasets create -p tmp_zip_dir --dir-mode zip"
     else:
-        print(f"[DEBUG] Updating dataset ..")
+        print(f"[DEBUG] Updating dataset {dataset_metadata["id"]} ..")
         kaggle_cmd = f'kaggle datasets version -p tmp_zip_dir --dir-mode zip -m "Updated model with new training" --delete-old-versions'
     result = subprocess.run(kaggle_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     output = result.stdout.decode()
@@ -344,11 +344,15 @@ def main():
             }
             torch.save(state, savepath)
 
+            tmp_checkpoint = torch.load(savepath, map_location=torch.device("cpu"))
+            logger.info(f"tmp checkpoint: {tmp_checkpoint['epoch']}")
+            del tmp_checkpoint
             debug_suffix = ""
             if args.debug:
                 debug_suffix = "-debug"
             metadata = create_kaggle_metadata(f"cadtransformer-model-only-no-nns-rename{debug_suffix}")
             save_kaggle_dataset(metadata, "/kaggle/working/CADTransformer/logs")
+
 
         # assert validation?
         eval = get_eval_criteria(epoch)

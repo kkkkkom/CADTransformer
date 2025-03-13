@@ -247,7 +247,7 @@ def main():
     val_dataset = CADDataLoader(split='val', do_norm=cfg.do_norm, cfg=cfg)
     val_dataloader = DataLoaderX(args.local_rank, dataset=val_dataset,
                                  batch_size=cfg.test_batch_size, shuffle=False,
-                                 num_workers=cfg.WORKERS, drop_last=False, collate_fn=custom_collate)
+                                 num_workers=cfg.WORKERS, drop_last=False)
     # Eval Only
     if args.local_rank == 0:
         if cfg.eval_only:
@@ -257,7 +257,7 @@ def main():
     test_dataset = CADDataLoader(split='test', do_norm=cfg.do_norm, cfg=cfg)
     test_dataloader = DataLoaderX(args.local_rank, dataset=test_dataset,
                                   batch_size=cfg.test_batch_size, shuffle=False,
-                                  num_workers=cfg.WORKERS, drop_last=False, collate_fn=custom_collate)
+                                  num_workers=cfg.WORKERS, drop_last=False)
     # Test Only
     if args.local_rank == 0:
         if cfg.test_only:
@@ -268,7 +268,7 @@ def main():
     train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset, shuffle=True)
     train_dataloader = DataLoaderX(args.local_rank, dataset=train_dataset,
                                    sampler=train_sampler, batch_size=cfg.batch_size,
-                                   num_workers=cfg.WORKERS, drop_last=True, collate_fn=custom_collate)
+                                   num_workers=cfg.WORKERS, drop_last=True)
 
     def bn_momentum_adjust(m, momentum):
         if isinstance(m, torch.nn.BatchNorm2d) or isinstance(m, torch.nn.BatchNorm1d):

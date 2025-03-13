@@ -90,7 +90,9 @@ def visualize_points_rename(point_set, seg_pred, offset_pred, seg_gt, offset_gt,
     """ visualization """
     os.makedirs(save_dir, exist_ok=True)
     # basename = str(basename[0].split(".")[0])
+    print(f"[DEBUG] Pre basename: {basename}")
     basename = Path(basename[0]).stem
+    print(f"[DEBUG] Post basename: {basename}")
     # img = np.zeros((700, 700, 3))
     image_path = str(root_dir / basename) + ".png"
     # print(f"\n[DEBUG] Reading image {image_path} ..")

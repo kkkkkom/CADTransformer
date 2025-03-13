@@ -229,7 +229,8 @@ def main():
     model.train()
 
     # Load/Resume ckpt
-    start_epoch = 0
+    # start_epoch = 0
+    start_epoch = -1
     if cfg.load_ckpt != '':
         if os.path.exists(cfg.load_ckpt):
             checkpoint = torch.load(cfg.load_ckpt, map_location=torch.device("cpu"))
@@ -293,11 +294,11 @@ def main():
 
     print("> start epoch", start_epoch)
     logger.info(f"[DEBUG] cfg.epoch={cfg.epoch}")
-    for epoch in range(start_epoch, cfg.epoch):
+    for epoch in range(start_epoch+1, cfg.epoch):
         logger.info(f"=> {cfg.log_dir}")
 
         logger.info("\n\n")
-        logger.info(f'Epoch {global_epoch + 1} ({epoch + 1}/{cfg.epoch})')
+        logger.info(f'Epoch 1-based: {global_epoch + 1} ({epoch + 1}/{cfg.epoch})')
         lr = max(cfg.learning_rate * (cfg.lr_decay ** (epoch // cfg.step_size)),
                  cfg.LEARNING_RATE_CLIP)
         if epoch <= cfg.epoch_warmup:

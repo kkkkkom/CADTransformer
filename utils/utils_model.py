@@ -244,6 +244,9 @@ _FEAT_DIMS = {
     "resnet101_fpn": (256, 256, 256, 256)
 }
 
+device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
+
 class AMSoftmaxLayer(nn.Module):
     """AMSoftmaxLayer"""
     def __init__(self,
@@ -297,7 +300,8 @@ class BackgroundGenerator(threading.Thread):
 class DataLoaderX(DataLoader):
     def __init__(self, local_rank, **kwargs):
         super(DataLoaderX, self).__init__(**kwargs)
-        self.stream = torch.cuda.Stream(local_rank)
+        if torch.cuda.is_available():
+            self.stream = torch.cuda.Stream(local_rank)
         self.local_rank = local_rank
 
     def __iter__(self):
@@ -310,14 +314,19 @@ class DataLoaderX(DataLoader):
         self.batch = next(self.iter, None)
         if self.batch is None:
             return None
-        with torch.cuda.stream(self.stream):
+        if torch.cuda.is_available():
+            with torch.cuda.stream(self.stream):
+                for k in range(len(self.batch)):
+                    if isinstance(self.batch[k], torch.Tensor):
+                        self.batch[k] = self.batch[k].to(device=self.local_rank, non_blocking=True)
+        else:
             for k in range(len(self.batch)):
                 if isinstance(self.batch[k], torch.Tensor):
-                    self.batch[k] = self.batch[k].to(device=self.local_rank,
-                                                    non_blocking=True)
+                    self.batch[k] = self.batch[k].to(device="cpu")
 
     def __next__(self):
-        torch.cuda.current_stream().wait_stream(self.stream)
+        if torch.cuda.is_available():
+            torch.cuda.current_stream().wait_stream(self.stream)
         batch = self.batch
         if batch is None:
             raise StopIteration

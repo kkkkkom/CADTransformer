@@ -15,6 +15,8 @@ from timm.models.helpers import build_model_with_cfg, named_apply, adapt_input_c
 from utils.utils_model import vit_stage_layer_mapping
 from pdb import set_trace as st
 
+device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
 
 def get_vit(pretrained=True, cfg=None):
     model_nn = cfg.model.model_nn.split("_")
@@ -35,7 +37,8 @@ def get_vit(pretrained=True, cfg=None):
     print(f"[DEBUG] model_k: {model_k_}")
     ViT = vit_small_patch32_384_(pretrained=pretrained, model_nn=model_nn_, model_k=model_k_)
     # ViT = vit_base_patch32_384_(pretrained=pretrained, model_nn=model_nn_, model_k=model_k_)
-    ViT.cuda()
+    # ViT.cuda()
+    ViT.to(device)
     return ViT
 
 

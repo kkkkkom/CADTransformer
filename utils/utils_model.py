@@ -280,7 +280,8 @@ class BackgroundGenerator(threading.Thread):
         self.start()
 
     def run(self):
-        torch.cuda.set_device(self.local_rank)
+        if torch.cuda.is_available():
+            torch.cuda.set_device(self.local_rank)
         for item in self.generator:
             self.queue.put(item)
         self.queue.put(None)

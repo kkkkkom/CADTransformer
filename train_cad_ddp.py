@@ -196,7 +196,7 @@ def main():
         )
         device = torch.device('cuda:{}'.format(args.local_rank))
     else:
-        dist.init_process_group(
+        torch.distributed.init_process_group(
             backend="gloo", init_method="env://"
         )
         device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")

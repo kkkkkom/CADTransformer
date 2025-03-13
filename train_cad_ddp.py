@@ -68,10 +68,10 @@ def save_kaggle_dataset(dataset_metadata, source_dir):
     shutil.move("/kaggle/working/dataset-metadata.json", "tmp_zip_dir/dataset-metadata.json")
     # if Path("/kaggle").exists():
     if not dataset_exists(dataset_metadata["id"]):
-        print(f"[DEBUG] Creating new dataset {dataset_metadata["id"]} ..")
+        print(f"[DEBUG] Creating new dataset {dataset_metadata['id']} ..")
         kaggle_cmd = f"kaggle datasets create -p tmp_zip_dir --dir-mode zip"
     else:
-        print(f"[DEBUG] Updating dataset {dataset_metadata["id"]} ..")
+        print(f"[DEBUG] Updating dataset {dataset_metadata['id']} ..")
         kaggle_cmd = f'kaggle datasets version -p tmp_zip_dir --dir-mode zip -m "Updated model with new training" --delete-old-versions'
     result = subprocess.run(kaggle_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     output = result.stdout.decode()

@@ -218,9 +218,14 @@ def main():
     else:
         optimizer = torch.optim.SGD(model.parameters(), lr=cfg.learning_rate, momentum=0.9)
 
-    model = torch.nn.parallel.DistributedDataParallel(
-        module=model.to(device), broadcast_buffers=False,
-        device_ids=[args.local_rank], output_device=args.local_rank, find_unused_parameters=True)
+    if args.device=="cuda":
+        model = torch.nn.parallel.DistributedDataParallel(
+            module=model.to(device), broadcast_buffers=False,
+            device_ids=[args.local_rank], output_device=args.local_rank, find_unused_parameters=True)
+    else:
+        model = torch.nn.parallel.DistributedDataParallel(
+            module=model.to(device), broadcast_buffers=False,
+            find_unused_parameters=True)
     model.train()
 
     # Load/Resume ckpt

@@ -164,6 +164,7 @@ def parse_args():
     parser.add_argument('--debug', action="store_true")
     parser.add_argument('--visualize', action="store_true")
     parser.add_argument('--epoch', type=int, default=1)
+    parser.add_argument('--device', type=str, default="cuda")
     parser.add_argument('opts',
                         help="Modify config options using the command-line",
                         default=None,
@@ -188,11 +189,15 @@ def main():
         logger = create_logger(cfg.log_dir, 'train')
 
     # Distributed Train Config
-    torch.cuda.set_device(args.local_rank)
-    torch.distributed.init_process_group(
-        backend="nccl", init_method="env://",
-    )
-    device = torch.device('cuda:{}'.format(args.local_rank))
+    if args.device=="cuda":
+        torch.cuda.set_device(args.local_rank)
+        torch.distributed.init_process_group(
+            backend="nccl", init_method="env://",
+        )
+        device = torch.device('cuda:{}'.format(args.local_rank))
+    else:
+        device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
 
     # Create Model
     model = CADTransformer(cfg)

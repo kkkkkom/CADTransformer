@@ -101,7 +101,8 @@ class CADDataLoader(Dataset):
 
         image = Image.open(img_path).convert("RGB")
         image = image.resize((self.size, self.size))
-        image = self.transform(image).cuda()
+        # image = self.transform(image).cuda()
+        image = self.transform(image).to(device)
 
         adj_node_classes = np.load(ann_path, \
                                    allow_pickle=True).item()

@@ -56,7 +56,7 @@ class CADDataLoader(Dataset):
         self.length = len(self.image_path_list)
 
         print(" > before filter_smallset:", len(self.anno_path_list))
-        if not self.debug:
+        if not self.debug and self.max_prim > 0:
             self.image_path_list, self.anno_path_list = self.filter_smallset()
 
         if self.debug:

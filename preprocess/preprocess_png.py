@@ -1,14 +1,14 @@
 import logging
 import multiprocessing
+from datetime import datetime
 
-from PIL import Image
+from PIL import Image, ImageDraw
 import math
 import numpy as np
 from pathlib import Path
 from functools import partial, lru_cache
 from multiprocessing import Pool, Manager
 
-import anno_config
 from _utils_dataset import *
 
 logging.basicConfig(level=logging.DEBUG)
@@ -61,13 +61,32 @@ def is_point_too_close(new_point, existing_point, min_distance):
         return True
     return False
 
+def visualize_npy(npy_data, png_path=None, show=False):
+    image = Image.new("RGB", (980, 980), "white")
+    draw = ImageDraw.Draw(image)
+
+    # Draw dots
+    dot_radius = 3
+    for x, y in npy_data["center"]:
+        draw.ellipse((x - dot_radius, y - dot_radius, x + dot_radius, y + dot_radius), fill="black")
+
+    # Save the image
+    if png_path is not None:
+        image.save(png_path)
+
+    # Show the image (optional)
+    if show:
+        image.show()
+
+
 def png2npy(png_path, output_dir, counter, lock, total_cnt):
     with lock:
         counter.value += 1
         current_count = counter.value
     npy_path = Path(output_dir) / Path(png_path).with_suffix(".npy").name
+    t0 = datetime.now()
     logger.debug(f"{current_count}/{total_cnt} Processing {png_path} ...")
-    logger.debug(f" -> {npy_path} ...")
+    logger.debug(f"{current_count}/{total_cnt}      -> {npy_path} ...")
     img = Image.open(str(png_path))
     minx, miny = (0, 0)
     width, height = img.size
@@ -93,12 +112,14 @@ def png2npy(png_path, output_dir, counter, lock, total_cnt):
     ### filter to reduce density ###
     len0 = len(nodes)
     min_distance = 8
+    max_cnt = len0 / 8
     kept_indices = list(range(len0))
-    for _ in range(1024):
+    for _ in range(16):
         if min_distance > width/2:
             break
-        if len(nodes) < len0/8:
+        if len(kept_indices) < max_cnt:
             break
+        logger.debug(f"{current_count}/{total_cnt}      min_distance={min_distance}")
         new_kept_indices = []
         for i in kept_indices:
             keep = True
@@ -118,6 +139,8 @@ def png2npy(png_path, output_dir, counter, lock, total_cnt):
         # instances = [instances[i] for i in kept_indices]
         kept_indices = new_kept_indices
         min_distance*=2
+    t1 = datetime.now()
+    logger.debug(f"{current_count}/{total_cnt} Done filtering {t1-t0}.")
     nodes = [nodes[i] for i in kept_indices]
     centers = [centers[i] for i in kept_indices]
     classes = [classes[i] for i in kept_indices]
@@ -137,17 +160,18 @@ def png2npy(png_path, output_dir, counter, lock, total_cnt):
     np.save(npy_path, data_gcn)
 
 if __name__ == "__main__":
-    splits = ["val"]
+    splits = ["train"]
 
+    start, end = 0, None
     for split in splits:
-        all_png_paths = list(Path(f"./processed/png_colored/{split}").glob("*.png"))[750:790]
+        all_png_paths = sorted(list(Path(f"./processed/png_colored/{split}").glob("*.png")))[start:end]
 
         total_cnt = len(all_png_paths)
         out_dir = Path(f"./processed/npy_pixeled/{split}")
         out_dir.mkdir(exist_ok=True, parents=True)
 
         manager = Manager()
-        counter = manager.Value("i", 750)  # Shared counter
+        counter = manager.Value("i", start)  # Shared counter
         lock = manager.Lock()  # Shared lock for synchronization
 
         # Initialize the worker processes with the shared counter and lock

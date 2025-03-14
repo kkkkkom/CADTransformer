@@ -59,19 +59,24 @@ def dataset_exists(dataset_id):
 
 def save_kaggle_dataset(dataset_metadata, source_dir):
     zip_path = f"{Path(source_dir).name}.zip"
+    subprocess.run(f"rm {zip_path}", shell=True)
     res = subprocess.run(f"zip -r {zip_path} {source_dir}", shell=True, stderr=subprocess.STDOUT)
     print(f"[DEBUG] zip res: {res.returncode}")
+
     res = subprocess.run(f"mkdir -p tmp_zip_dir", shell=True, stderr=subprocess.STDOUT)
     print(f"[DEBUG] mkdir res: {res.returncode}")
+
+    subprocess.run(f"rm tmp_zip_dir/*", shell=True)
     res = subprocess.run(f"mv {zip_path} tmp_zip_dir/", shell=True, stderr=subprocess.STDOUT)
     print(f"[DEBUG] mv res: {res.returncode}")
+
     shutil.move("/kaggle/working/dataset-metadata.json", "tmp_zip_dir/dataset-metadata.json")
     # if Path("/kaggle").exists():
     if not dataset_exists(dataset_metadata["id"]):
-        print(f"[DEBUG] Creating new dataset {dataset_metadata['id']} ..")
+        print(f"[DEBUG] Creating new dataset ..")
         kaggle_cmd = f"kaggle datasets create -p tmp_zip_dir --dir-mode zip"
     else:
-        print(f"[DEBUG] Updating dataset {dataset_metadata['id']} ..")
+        print(f"[DEBUG] Updating dataset ..")
         kaggle_cmd = f'kaggle datasets version -p tmp_zip_dir --dir-mode zip -m "Updated model with new training" --delete-old-versions'
     result = subprocess.run(kaggle_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     output = result.stdout.decode()
@@ -79,7 +84,6 @@ def save_kaggle_dataset(dataset_metadata, source_dir):
     print(output)
     print(error)
     print(f"[DEBUG] Dataset saved.")
-
 
 print("Import Done.")
 

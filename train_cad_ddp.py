@@ -355,7 +355,7 @@ def main():
             debug_suffix = ""
             if args.debug:
                 debug_suffix = "-debug"
-            metadata = create_kaggle_metadata(f"{get_kaggle_username()}-cad-model-no-nns-rename{debug_suffix}-B")
+            metadata = create_kaggle_metadata(f"{get_kaggle_username()}-cad-model-no-nns-rename{debug_suffix}-b")
             save_kaggle_dataset(metadata, "/kaggle/working/CADTransformer/logs")
 
 

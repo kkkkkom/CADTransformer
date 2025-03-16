@@ -337,6 +337,7 @@ def main():
                 loss.backward()
 
                 if (i + 1) % args.accum_step == 0 or i == len(_tqdm) - 1:
+                    logger.info(f"[DEBUG] stepping: accum_step={args.accm_step}, i={i}")
                     optimizer.step()
                     optimizer.zero_grad()
                 _tqdm.set_postfix(loss=loss.item(), l_seg=loss_seg.item())

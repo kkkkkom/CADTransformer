@@ -358,7 +358,7 @@ def main():
             debug_suffix = ""
             if args.debug:
                 debug_suffix = "-debug"
-            metadata = create_kaggle_metadata(f"{get_kaggle_username()}-cad-model-no-nns-rename{debug_suffix}-b")
+            metadata = create_kaggle_metadata(f"{get_kaggle_username()}-cad-model-no-nns-rename{debug_suffix}")
             save_kaggle_dataset(metadata, "/kaggle/working/CADTransformer/logs")
 
         # assert validation?

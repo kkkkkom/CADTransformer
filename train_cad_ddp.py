@@ -173,6 +173,7 @@ def parse_args():
     parser.add_argument('--visualize', action="store_true")
     parser.add_argument('--epoch', type=int, default=1)
     parser.add_argument('--device', type=str, default="cuda")
+    parser.add_argument('--accum_step', type=int, default=1)
     parser.add_argument('opts',
                         help="Modify config options using the command-line",
                         default=None,
@@ -301,6 +302,7 @@ def main():
 
     print("> start epoch", start_epoch)
     logger.info(f"[DEBUG] cfg.epoch={cfg.epoch}")
+    optimizer.zero_grad()
     for epoch in range(start_epoch + 1, cfg.epoch):
         logger.info(f"=> {cfg.log_dir}")
 
@@ -324,16 +326,19 @@ def main():
         # training loops
         with tqdm(train_dataloader, total=len(train_dataloader), smoothing=0.9) as _tqdm:
             for i, (image, xy, target, rgb_info, nns, offset_gt, inst_gt, index, basename) in enumerate(_tqdm):
-                optimizer.zero_grad()
+                # optimizer.zero_grad()
 
                 seg_pred = model(image, xy, rgb_info, nns)
                 seg_pred = seg_pred.contiguous().view(-1, cfg.num_class + 1)
                 target = target.view(-1, 1)[:, 0]
 
                 loss_seg = CE_loss(seg_pred, target)
-                loss = loss_seg
+                loss = loss_seg / args.accum_step
                 loss.backward()
-                optimizer.step()
+
+                if (i + 1) % args.accum_step == 0 or i == len(_tqdm) - 1:
+                    optimizer.step()
+                    optimizer.zero_grad()
                 _tqdm.set_postfix(loss=loss.item(), l_seg=loss_seg.item())
 
                 if i % args.log_step == 0 and args.local_rank == 0:

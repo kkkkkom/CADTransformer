@@ -47,14 +47,17 @@ def create_kaggle_metadata(title):
 
 
 def dataset_exists(dataset_id):
-    username = get_kaggle_username()
-    result = subprocess.run(
-        ["kaggle", "datasets", "list", "--user", username, "--search", dataset_id],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-    output = result.stdout.decode("utf-8")
-    return dataset_id in output
+    # username = get_kaggle_username()
+    # result = subprocess.run(
+    # f"kaggle datasets list --user {username} --search {dataset_id}",
+    # stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
+    # )
+    # output = result.stdout.decode("utf-8")
+    # return dataset_id in output
+    result = subprocess.run(f"kaggle datasets status {dataset_id}", stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                            shell=True)
+    output = result.stdout.decode()
+    return "ready" in output
 
 
 def save_kaggle_dataset(dataset_metadata, source_dir):
@@ -84,6 +87,7 @@ def save_kaggle_dataset(dataset_metadata, source_dir):
     print(output)
     print(error)
     print(f"[DEBUG] Dataset saved.")
+
 
 print("Import Done.")
 
@@ -193,7 +197,7 @@ def main():
         logger = create_logger(cfg.log_dir, 'train')
 
     # Distributed Train Config
-    if args.device=="cuda":
+    if args.device == "cuda":
         torch.cuda.set_device(args.local_rank)
         torch.distributed.init_process_group(
             backend="nccl", init_method="env://",
@@ -204,7 +208,6 @@ def main():
             backend="gloo", init_method="env://"
         )
         device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-
 
     # Create Model
     model = CADTransformer(cfg)
@@ -222,7 +225,7 @@ def main():
     else:
         optimizer = torch.optim.SGD(model.parameters(), lr=cfg.learning_rate, momentum=0.9)
 
-    if args.device=="cuda":
+    if args.device == "cuda":
         model = torch.nn.parallel.DistributedDataParallel(
             module=model.to(device), broadcast_buffers=False,
             device_ids=[args.local_rank], output_device=args.local_rank, find_unused_parameters=True)
@@ -298,7 +301,7 @@ def main():
 
     print("> start epoch", start_epoch)
     logger.info(f"[DEBUG] cfg.epoch={cfg.epoch}")
-    for epoch in range(start_epoch+1, cfg.epoch):
+    for epoch in range(start_epoch + 1, cfg.epoch):
         logger.info(f"=> {cfg.log_dir}")
 
         logger.info("\n\n")
@@ -357,7 +360,6 @@ def main():
                 debug_suffix = "-debug"
             metadata = create_kaggle_metadata(f"{get_kaggle_username()}-cad-model-no-nns-rename{debug_suffix}-b")
             save_kaggle_dataset(metadata, "/kaggle/working/CADTransformer/logs")
-
 
         # assert validation?
         eval = get_eval_criteria(epoch)

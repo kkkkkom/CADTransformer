@@ -80,7 +80,7 @@ def save_kaggle_dataset(dataset_metadata, source_dir):
         kaggle_cmd = f"kaggle datasets create -p tmp_zip_dir --dir-mode zip"
     else:
         print(f"[DEBUG] Updating dataset ..")
-        kaggle_cmd = f'kaggle datasets version -p tmp_zip_dir --dir-mode zip -m "Updated model with new training" --delete-old-versions'
+        kaggle_cmd = f'kaggle datasets version -p tmp_zip_dir --dir-mode zip -m "Updated model with new training"'
     result = subprocess.run(kaggle_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     output = result.stdout.decode()
     error = result.stderr.decode()

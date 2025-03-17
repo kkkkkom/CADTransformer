@@ -60,7 +60,7 @@ def dataset_exists(dataset_id):
     return "ready" in output
 
 
-def save_kaggle_dataset(dataset_metadata, source_dir):
+def save_kaggle_dataset(dataset_metadata, source_dir, delete_old=False):
     zip_path = f"{Path(source_dir).name}.zip"
     subprocess.run(f"rm {zip_path}", shell=True)
     res = subprocess.run(f"zip -r {zip_path} {source_dir}", shell=True, stderr=subprocess.STDOUT)
@@ -80,7 +80,7 @@ def save_kaggle_dataset(dataset_metadata, source_dir):
         kaggle_cmd = f"kaggle datasets create -p tmp_zip_dir --dir-mode zip"
     else:
         print(f"[DEBUG] Updating dataset ..")
-        kaggle_cmd = f'kaggle datasets version -p tmp_zip_dir --dir-mode zip -m "Updated model with new training"'
+        kaggle_cmd = f'kaggle datasets version -p tmp_zip_dir --dir-mode zip -m "Updated model with new training" {"--delete-old-versions" if delete_old else ""}'
     result = subprocess.run(kaggle_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     output = result.stdout.decode()
     error = result.stderr.decode()
